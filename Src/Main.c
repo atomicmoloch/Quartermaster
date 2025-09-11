@@ -47,7 +47,7 @@ static void MainFormInit(FormType *frmP)
  *     menu item id
  */
 
-static Boolean MainFormDoCommand(UInt16 command)
+Boolean MainFormDoCommand(UInt16 command)
 {
 	Boolean handled = false;
 
@@ -97,7 +97,7 @@ static Boolean MainFormDoCommand(UInt16 command)
  *     FrmHandleEvent
  */
 
-static Boolean MainFormHandleEvent(EventType * eventP)
+Boolean MainFormHandleEvent(EventType * eventP)
 {
 	Boolean handled = false;
 	FormType * frmP;

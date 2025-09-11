@@ -40,7 +40,7 @@
  *     address of object as a void pointer
  */
 
-static void * GetObjectPtr(UInt16 objectID)
+void * GetObjectPtr(UInt16 objectID)
 {
 	FormType * frmP;
 
@@ -163,7 +163,20 @@ static Err AppStart(void)
         "Cook until white is partially set, then stir until cooking is completed, when "
         "whites will be thoroughly set. Season with salt and pepper.";
 		
+		
+		UInt16 counts2[7] = {2, 2, 1, 1, 4, 1, 0};	
+		const Char *units2[7] = {"tbsp", "tbsp", "cup", "cup", "", "tsp", "Few Grains"};
+		const Char *ingredients2[7] = {"Butter", "Flour", "Milk", "Cream", "Eggs", "Salt", "Cayenne"};
+   		const Char *steps2 =
+        "Scald milk and cream.\nCream butter, add flour, and pour on gradually milk and cream.\n"
+        "Cook in double boiler 5 minutes, add egg yolks, beaten until thick and lemon-colored.\n"
+        "Remove from fire, add seasonings, fold in egg whites beaten until stiff.\n"
+        "Turn into buttered dish or buttered individual molds, set in pan of hot water, and bake in slow oven (350 F.) 45 to 60 minutes or until firm.\n"
+        "Serve from baking dish. Egg souffle may be served with White Sauce I, highly seasoned with celery salt, paprika, and onion juice.";
+        
+        		
 		err = AddRecipe("Scrambled Eggs", ingredients, units, 2, counts, steps);
+        err = AddRecipe("Egg Souffle", ingredients2, units2, 7, counts2, steps2);
 	}
 	
 	return err;

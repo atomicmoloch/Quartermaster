@@ -3,10 +3,12 @@
 #include "Quartermaster_Rsc.h"
 
 /*********************************************************************
- * Internal Variables
+ * External Variables
  *********************************************************************/
 
-//static DmOpenRef gPantryDB = NULL;
+DmOpenRef gRecipeDB;
+DmOpenRef gIngredientDB;
+DmOpenRef gUnitDB;
 
 /*********************************************************************
  * Internal Functions
@@ -65,24 +67,30 @@ Err DatabaseOpen() {
     
     dbID = DmFindDatabase(0, databaseRecipeName);
     if (!dbID) {
-        dbID = DmCreateDatabase(0, databaseRecipeName, databaseCreatorID, 'Data', false);
+        DmCreateDatabase(0, databaseRecipeName, databaseCreatorID, 'Data', false);
+        dbID = DmFindDatabase(0, databaseRecipeName);
         if (!dbID) return dmErrCantOpen;
     }
     gRecipeDB = DmOpenDatabase(0, dbID, dmModeReadWrite);
+    if (!gRecipeDB) return DmGetLastErr();
 
     dbID = DmFindDatabase(0, databaseIngredientName);
     if (!dbID) {
-        dbID = DmCreateDatabase(0, databaseIngredientName, databaseCreatorID, 'Data', false);
+        DmCreateDatabase(0, databaseIngredientName, databaseCreatorID, 'Data', false);
+        dbID = DmFindDatabase(0, databaseIngredientName);
         if (!dbID) return dmErrCantOpen;
     }
     gIngredientDB = DmOpenDatabase(0, dbID, dmModeReadWrite);
+    if (!gIngredientDB) return DmGetLastErr();
     
     dbID = DmFindDatabase(0, databaseUnitName);
     if (!dbID) {
-        dbID = DmCreateDatabase(0, databaseUnitName, databaseCreatorID, 'Data', false);
+        DmCreateDatabase(0, databaseUnitName, databaseCreatorID, 'Data', false);
+        dbID = DmFindDatabase(0, databaseUnitName);
         if (!dbID) return dmErrCantOpen;
     }
     gUnitDB = DmOpenDatabase(0, dbID, dmModeReadWrite);
+    if (!gUnitDB) return DmGetLastErr();
 
     return errNone;
 }
@@ -111,13 +119,14 @@ void DatabaseClose() {
  *
  * DESCRIPTION:  Adds new recipe to database
  *
- * PARAMETERS:   Pointer to recipe object
+ * PARAMETERS:   Name, ingredients, units, amounts, number of ingredients
+ *				 and steps of recipe
  *
- * RETURNED:     
+ * RETURNED:     Err
  *
  ***********************************************************************/
 
-Boolean AddRecipe(
+Err AddRecipe(
     const Char *recipeName,
     const Char *ingredientNames[],
     const Char *unitNames[],
@@ -133,47 +142,53 @@ Boolean AddRecipe(
 	RecipeRecord *recP;
 	UInt16 recordIndex;
     UInt16 i;
-    Char *stepsP;
+    
+    if (err != errNone) return err;
 	
 	StrNCopy(recipe.name, recipeName, sizeof(recipe.name)-1);
-	
+    for (i = 0; i < numIngredients; i++) {
+        recipe.ingredientCounts[i] = counts[i];
+
+        recipe.ingredientIDs[i] = IngredientIDByName(ingredientNames[i]);
+        if (recipe.ingredientIDs[i] == -1) return dmErrResourceNotFound; 
+
+        recipe.ingredientUnits[i] = UnitIDByName(unitNames[i]);
+        if (recipe.ingredientUnits[i] == -1) return dmErrResourceNotFound;
+    }	
 	//Keeps database sorted alphabetically
 	recordIndex = DmFindSortPosition(gRecipeDB, &recipe, 0, (DmComparF *) CompareRecipeNames, 0);
 	
 	recH = DmNewRecord(gRecipeDB, &recordIndex, totalSize);
-	recP = MemHandleLock(recH);
-	
-	StrNCopy(recP->name, recipeName, sizeof(recP->name)-1);
-    for (i = 0; i < numIngredients; i++) {
-        recP->ingredientCounts[i] = counts[i];
+	recP = MemHandleLock(recH);    
 
-        recP->ingredientIDs[i] = IngredientIDByName(ingredientNames[i]);
-        if (recP->ingredientIDs[i] == -1) return false; // failed to add/lookup ingredient
+	DmWrite(recP, 
+        0,  
+        &recipe,
+        sizeof(recipe));       
 
-        recP->ingredientUnits[i] = UnitIDByName(unitNames[i]);
-        if (recP->ingredientUnits[i] == -1) return false; // failed to add/lookup unit
-    }
-    
-	stepsP = (Char *)recP + sizeof(RecipeRecord);
-	StrCopy(stepsP, recipeSteps);
-	
+	DmWrite(recP, 
+        sizeof(recipe), 
+        recipeSteps,
+        stepsLen);       
+        
 	MemHandleUnlock(recH);
 	DmReleaseRecord(gRecipeDB, recordIndex, true);
 
-	return true;
+	return errNone;
 }
 
 
 
 /***********************************************************************
  *
- * FUNCTION:     
+ * FUNCTION:     IngredientIDByName
  *
- * DESCRIPTION:  
+ * DESCRIPTION:  Returns database identifier of the ingredient with the
+ *				 specified name, or creates a new entry
  *
- * PARAMETERS:   
+ * PARAMETERS:   name of ingredient
  *
- * RETURNED:     
+ * RETURNED:     IngredientDB ID of ingredient, or -1 if error
  *
  ***********************************************************************/
 UInt32 IngredientIDByName(const Char *ingredientName)
@@ -193,7 +208,6 @@ UInt32 IngredientIDByName(const Char *ingredientName)
         if (recH) {
 	        recP = MemHandleLock(recH);
 	        if (StrCompare(recP, ingredientName) == 0) {
-	            // Found a match: get its unique ID
 	            DmRecordInfo(gIngredientDB, i, NULL, &entryID, NULL);
 	            MemHandleUnlock(recH);
 	            return entryID;
@@ -206,20 +220,30 @@ UInt32 IngredientIDByName(const Char *ingredientName)
     index = DmFindSortPosition(gIngredientDB, (void *) ingredientName, 0, (DmComparF *) DBStringCompare, 0);
     newRecH = DmNewRecord(gIngredientDB, &index, StrLen(ingredientName) + 1);
     if (!newRecH) {
-        return -1; // out of memory or another error
+        return -1;
     }
 
     newRecP = MemHandleLock(newRecH);
-    StrCopy(newRecP, ingredientName);
+    DmWrite(newRecP, 0, ingredientName, StrLen(ingredientName) + 1);
     MemHandleUnlock(newRecH);
     DmReleaseRecord(gIngredientDB, index, true);
 
-    // Get the unique ID of the new record
     DmRecordInfo(gIngredientDB, index, NULL, &entryID, NULL);
     return entryID;
 }
 
-Boolean IngredientNameByID(UInt32 entryID, char* buffer)
+/***********************************************************************
+ *
+ * FUNCTION:     IngredientNameByID
+ *
+ * DESCRIPTION:  Gets ingredient name from DB identifier, writes to buffer
+ *
+ * PARAMETERS:   DB id, buffer to write to
+ *
+ * RETURNED:     Err
+ *
+ ***********************************************************************/
+Err IngredientNameByID(UInt32 entryID, Char* buffer)
 {
 	UInt16 index;
 	MemHandle rech;
@@ -231,13 +255,25 @@ Boolean IngredientNameByID(UInt32 entryID, char* buffer)
 			recp = MemHandleLock(rech);
 			StrCopy(buffer, recp);
 			MemHandleUnlock(rech);
-			return true;
+			return errNone;
 		}
 	}
 	
-	return false;
+	return dmErrCantFind;
 }
 
+/***********************************************************************
+ *
+ * FUNCTION:     UnitIDByName
+ *
+ * DESCRIPTION:  Returns database identifier of the unit with the
+ *				 specified name, or creates a new entry
+ *
+ * PARAMETERS:   unit as string
+ *
+ * RETURNED:     UnitDB ID of ingredient, or -1 if error
+ *
+ ***********************************************************************/
 UInt32 UnitIDByName(const Char *unitName)
 {
     UInt16 numRecords = DmNumRecords(gUnitDB);
@@ -255,7 +291,6 @@ UInt32 UnitIDByName(const Char *unitName)
         if (recH) {
 	        recP = MemHandleLock(recH);
 	        if (StrCompare(recP, unitName) == 0) {
-	            // Found a match: get its unique ID
 	            DmRecordInfo(gUnitDB, i, NULL, &entryID, NULL);
 	            MemHandleUnlock(recH);
 	            return entryID;
@@ -268,21 +303,30 @@ UInt32 UnitIDByName(const Char *unitName)
     index = DmFindSortPosition(gRecipeDB, (void *) unitName, 0, (DmComparF *) DBStringCompare, 0);
     newRecH = DmNewRecord(gUnitDB, &index, StrLen(unitName) + 1);
     if (!newRecH) {
-        return -1; // out of memory or another error
+        return -1;
     }
 
     newRecP = MemHandleLock(newRecH);
-    StrCopy(newRecP, unitName);
+    DmWrite(newRecP, 0, unitName, StrLen(unitName) + 1);
     MemHandleUnlock(newRecH);
     DmReleaseRecord(gUnitDB, index, true);
 
-    // Get the unique ID of the new record
     DmRecordInfo(gUnitDB, index, NULL, &entryID, NULL);
     return entryID;
 }
 
-
-Boolean UnitNameByID(UInt32 entryID, char* buffer)
+/***********************************************************************
+ *
+ * FUNCTION:     UnitNameByID
+ *
+ * DESCRIPTION:  Gets unit name from DB identifier, writes to buffer
+ *
+ * PARAMETERS:   DB id, buffer to write to
+ *
+ * RETURNED:     Err
+ *
+ ***********************************************************************/
+Err UnitNameByID(UInt32 entryID, char* buffer)
 {
 	UInt16 index;
 	MemHandle rech;
@@ -294,9 +338,9 @@ Boolean UnitNameByID(UInt32 entryID, char* buffer)
 			recp = MemHandleLock(rech);
 			StrCopy(buffer, recp);
 			MemHandleUnlock(rech);
-			return true;
+			return errNone;
 		}
 	}
 	
-	return false;
+	return dmErrCantFind;
 }

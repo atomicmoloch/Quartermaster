@@ -5,6 +5,8 @@
  *
  */
  
+#include <PalmOS.h>
+ 
 #ifndef QUARTERMASTER_H_
 #define QUARTERMASTER_H_
 
@@ -41,16 +43,18 @@ typedef struct {
  * Global variables
  *********************************************************************/
  
- static UInt32 PantryIngredients[recipeMaxIngredients];
+//static UInt32 PantryIngredients[recipeMaxIngredients];
  
 // Database handles 
-	static DmOpenRef gRecipeDB = NULL;
-	static DmOpenRef gIngredientDB = NULL;
-	static DmOpenRef gUnitDB = NULL;
+extern DmOpenRef gRecipeDB;
+extern DmOpenRef gIngredientDB;
+extern DmOpenRef gUnitDB;
 
 /*********************************************************************
  * Quartermaster.c functions
  *********************************************************************/
+
+void * GetObjectPtr(UInt16 objectID);
  
 /*********************************************************************
  * Database.c functions
@@ -59,13 +63,13 @@ typedef struct {
 Err DatabaseOpen();
 void DatabaseClose();
 
-Boolean AddRecipe(const Char *recipeName, const Char *ingredientNames[],
+Err AddRecipe(const Char *recipeName, const Char *ingredientNames[],
     const Char *unitNames[], UInt16 numIngredients, const UInt16 counts[],
     const Char *recipeSteps);
 UInt32 IngredientIDByName(const Char *ingredientName);
 UInt32 UnitIDByName(const Char *ingredientName);
-Boolean IngredientNameByID(UInt32 entryID, char* buffer);
-Boolean UnitNameByID(UInt32 entryID, char* buffer);
+Err IngredientNameByID(UInt32 entryID, char* buffer);
+Err UnitNameByID(UInt32 entryID, char* buffer);
 
 /*********************************************************************
  * Main.c functions
@@ -85,5 +89,6 @@ Boolean MainFormHandleEvent(EventType * eventP);
  *********************************************************************/
 Boolean ViewRecipeHandleEvent(EventPtr eventP); 
 void OpenRecipeForm(MemHandle recipe);
+void DrawRecipe(FormType *form);
 
 #endif /* QUARTERMASTER_H_ */
