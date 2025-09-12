@@ -6,3 +6,5 @@ I've frequently wanted an easy way to find all the recipes I could make with the
 Inspired by Sudo-nano's [application by the same name.](https://github.com/sudo-nano/quartermaster).
 
 Currently in early development!
+
+Made using the Codewarriors IDE
