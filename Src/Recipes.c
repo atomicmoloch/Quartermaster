@@ -37,24 +37,14 @@ static Err PopulateRecipeList(ListType* list) {
     RecipeRecord *recP;
     Char *writePtr;
 
-    // Free previous allocations if called again
-    if (recipeListCtx.namePtrs) {
-        MemPtrFree(recipeListCtx.namePtrs);
-        recipeListCtx.namePtrs = NULL;
-    }
-    if (recipeListCtx.nameStorage) {
-        MemPtrFree(recipeListCtx.nameStorage);
-        recipeListCtx.nameStorage = NULL;
-    }
-
-    // Calculate memory needs
     recipeListCtx.numRecipes = numRecords;
-
     recipeListCtx.namePtrs = MemPtrNew(numRecords * sizeof(Char *));
-    if (!recipeListCtx.namePtrs)
+    
+    if (!recipeListCtx.namePtrs) {
         return memErrNotEnoughSpace;
+    }
 
-    recipeListCtx.nameStorage = MemPtrNew(numRecords * 32);  // 32 = max recipe name length
+    recipeListCtx.nameStorage = MemPtrNew(numRecords * 32);
     if (!recipeListCtx.nameStorage) {
         MemPtrFree(recipeListCtx.namePtrs);
         recipeListCtx.namePtrs = NULL;

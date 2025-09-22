@@ -70,6 +70,7 @@ UInt32 IngredientIDByName(const Char *ingredientName);
 UInt32 UnitIDByName(const Char *ingredientName);
 Err IngredientNameByID(UInt32 entryID, char* buffer);
 Err UnitNameByID(UInt32 entryID, char* buffer);
+Boolean* QueryRecipes(UInt32 ingId);
 
 /*********************************************************************
  * Main.c functions
@@ -83,12 +84,18 @@ Boolean MainFormHandleEvent(EventType * eventP);
  
  Boolean RecipeListHandleEvent(EventPtr eventP);
  
- 
 /*********************************************************************
  * ViewRecipe.c functions
  *********************************************************************/
 Boolean ViewRecipeHandleEvent(EventPtr eventP); 
 void OpenRecipeForm(MemHandle recipe);
-void DrawRecipe(FormType *form);
+UInt16 DrawRecipe(FormType *form);
+
+/*********************************************************************
+ * Error.c functions
+ *********************************************************************/
+
+void displayError(Err code);
+void displayFatalError(Err code);
 
 #endif /* QUARTERMASTER_H_ */

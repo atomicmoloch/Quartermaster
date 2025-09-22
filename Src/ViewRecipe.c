@@ -10,7 +10,7 @@
 typedef struct {
     MemHandle recipe;  	   // pointer to the recipe to display
     Int16 scrollPos;       // vertical scroll position in pixels
-    Int16 contentHeight;   // total height of rendered content
+ 	Int16 maxScroll;
 } RecipeFormContext;
 
 static RecipeFormContext ctx;
@@ -27,11 +27,11 @@ static RecipeFormContext ctx;
  *
  * PARAMETERS:   Pointer to current form
  *
- * RETURNED:     nothing
+ * RETURNED:     content height (used in initial maxScroll calculation)
  *
  ***********************************************************************/
 
-void DrawRecipe(FormType *form)
+UInt16 DrawRecipe(FormType *form)
 {
     RectangleType r;
     UInt16 y;
@@ -49,14 +49,14 @@ void DrawRecipe(FormType *form)
     FrmGetObjectBounds(form, FrmGetObjectIndex(form, ViewRecipeScrollbar), &r);
     r.extent.x = r.topLeft.x;
     r.topLeft.x = 0;
-
     WinEraseRectangle(&r, 0);
+    
 
     y = r.topLeft.y - ctx.scrollPos; // start at top minus scroll offset
 
     // Draw recipe name (bold)
     FntSetFont(boldFont);
-    WinDrawChars(recipeP->name, StrLen(recipeP->name), 0, y);
+    if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(recipeP->name, StrLen(recipeP->name), 0, y);
     y += FntLineHeight() + 2;
 
     // Draw ingredients
@@ -65,11 +65,18 @@ void DrawRecipe(FormType *form)
         // Format: "count unit ingredient"
         IngredientNameByID(recipeP->ingredientIDs[i], namebuf);
         UnitNameByID(recipeP->ingredientUnits[i], unitbuf);
-        StrPrintF(buf, "%u %s %s", 
+        if (recipeP->ingredientCounts[i] == 0) {
+        	StrPrintF(buf, "%s %s", 
+                unitbuf,
+                namebuf);
+        }
+        else {
+        	StrPrintF(buf, "%u %s %s", 
                 recipeP->ingredientCounts[i],
                 unitbuf,
                 namebuf);
-        WinDrawChars(buf, StrLen(buf), 0, y);
+        }
+        if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(buf, StrLen(buf), 0, y);
         y += FntLineHeight();
     }
     y += 4;
@@ -85,14 +92,17 @@ void DrawRecipe(FormType *form)
         	lineEnd++; len++; 
         }
 
-        WinDrawChars(lineStart, len, 0, y);
+        if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(lineStart, len, 0, y);
         y += FntLineHeight();
         if (*lineEnd == '\n') lineEnd++;
         lineStart = lineEnd;
     }
+    
+    r.topLeft.y += r.extent.y;
+    WinEraseRectangle(&r, 0);
 
-    ctx.contentHeight = y; // total content height for scrollbar
     MemHandleUnlock(ctx.recipe);
+    return y;
 }
 
 /***********************************************************************
@@ -111,27 +121,27 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
 	FormPtr frmP = FrmGetActiveForm();
 	RectangleType r;
 	Coord displayHeight;
-	Int16 maxScroll = 0;
+	Coord contentHeight;
 
 	switch (eventP->eType) {
 		case frmOpenEvent:
 			FrmDrawForm (frmP);
-			DrawRecipe(frmP);
+			contentHeight = DrawRecipe(frmP);
 			FrmGetFormBounds(frmP, &r);
 			displayHeight = r.extent.y;
-			if (ctx.contentHeight > displayHeight) {
-				maxScroll = ctx.contentHeight - displayHeight;
+			if (contentHeight > displayHeight) {
+				ctx.maxScroll = contentHeight - displayHeight + FntLineHeight();
+				//Leaves one extra line of blank space
 			}
             SclSetScrollBar(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, ViewRecipeScrollbar)),
-                            0, maxScroll, 0, displayHeight);
+                            0, 0, ctx.maxScroll, displayHeight-1);
 			handled = true;
 			break;
 			
-        case sclRepeatEvent:
-            ctx.scrollPos += eventP->data.sclRepeat.newValue - eventP->data.sclRepeat.value;
+        case sclExitEvent:
+            ctx.scrollPos = (eventP->data.sclExit.newValue);
             if (ctx.scrollPos < 0) ctx.scrollPos = 0;
-            if (ctx.scrollPos > maxScroll) ctx.scrollPos = maxScroll;
-            FrmUpdateForm(formViewRecipe, 0);
+            DrawRecipe(frmP); //Change to frmUpdateForm if more is needed on form updates
             return true;
             
         case frmUpdateEvent:
@@ -140,6 +150,21 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
             
 		case menuEvent: //Likely change later
 			return MainFormDoCommand(eventP->data.menu.itemID);
+			
+		case keyDownEvent:
+			FrmGetFormBounds(frmP, &r);
+			displayHeight = r.extent.y;
+			if (eventP->data.keyDown.chr == pageUpChr) {
+				ctx.scrollPos -= FntLineHeight();
+				if (ctx.scrollPos < 0) ctx.scrollPos = 0;
+			
+			} else if (eventP->data.keyDown.chr == pageDownChr) {
+				ctx.scrollPos += FntLineHeight();
+				if (ctx.scrollPos > ctx.maxScroll) ctx.scrollPos = ctx.maxScroll;
+			}
+			SclSetScrollBar(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, ViewRecipeScrollbar)),
+                            ctx.scrollPos, 0, ctx.maxScroll, displayHeight-1);
+			DrawRecipe(frmP);
 			
 		default:		
 			break;
@@ -161,6 +186,6 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
 void OpenRecipeForm(MemHandle recipe) {
     ctx.recipe = recipe;
     ctx.scrollPos = 0;
-    ctx.contentHeight = 0;
+    ctx.maxScroll = 0;
     FrmGotoForm(formViewRecipe);
 }

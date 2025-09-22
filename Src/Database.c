@@ -98,7 +98,7 @@ Err DatabaseOpen() {
 
 /***********************************************************************
  *
- * FUNCTION:     DatabaseOpen
+ * FUNCTION:     DatabaseClose
  *
  * DESCRIPTION:  Closes all databases
  *
@@ -175,6 +175,53 @@ Err AddRecipe(
 	DmReleaseRecord(gRecipeDB, recordIndex, true);
 
 	return errNone;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     QueryRecipes
+ *
+ * DESCRIPTION:  
+ *
+ * PARAMETERS:   
+ *
+ * RETURNED:     (Note: must be freed by calling function!)
+ *
+ ***********************************************************************/
+Boolean* QueryRecipes(UInt32 ingId) {
+	UInt16 numRecipes = DmNumRecords(gRecipeDB);
+	Boolean *results;
+	UInt16 i;
+	MemHandle recH;
+	RecipeRecord *recP;
+	UInt16 j;
+	UInt16 numIngredients;
+
+	results = MemPtrNew(numRecipes * sizeof(Boolean));
+	
+/*	if (!results) {
+		return memErrNotEnoughSpace;
+	}*/
+//Must figure out error handling another way
+	
+	for (i = 0; i < numRecipes; i++) {
+		results[i] = false;
+		
+		recH = DmQueryRecord(gRecipeDB, i);
+		if (!recH) continue;
+		recP = MemHandleLock(recH);
+		
+		numIngredients = sizeof(recP->ingredientIDs) / sizeof(UInt32);
+		
+		for (j = 0; j < numIngredients; j++) {
+			if (recP->ingredientIDs[j] == ingId) results[i] = true;
+		}
+		
+		MemHandleUnlock(recH); 
+	}
+	
+	return results;
+
 }
 
 
