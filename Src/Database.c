@@ -18,7 +18,7 @@ DmOpenRef gUnitDB;
  *
  * FUNCTION:     CompareRecipeNames
  *
- * DESCRIPTION:  Internal function - compares recipe names 
+ * DESCRIPTION:  For DmFindSortPosition - compares recipe names 
  *               alphabetically
  *
  * PARAMETERS:   two recipe pointers
@@ -32,11 +32,21 @@ static Int16 CompareRecipeNames(void *rec1, void *rec2, Int16 other,
                         SortRecordInfoPtr rec2SortInfo,
                         MemHandle appInfoH)
 {
-    RecipeRecord *r1 = (RecipeRecord *)rec1;
-    RecipeRecord *r2 = (RecipeRecord *)rec2;
-    return StrCompare(r1->name, r2->name);
+    return StrCompare(((RecipeRecord *)rec1)->name, ((RecipeRecord *)rec2)->name);
 }
 
+/***********************************************************************
+ *
+ * FUNCTION:     DBStringCompare
+ *
+ * DESCRIPTION:  For DmFindSortPosition - compares database entries as strings
+ *
+ * PARAMETERS:   two Char* pointers
+ *
+ * RETURNED:     0 if strings match, positive number if rec1 sorts after
+ *				 rec2 alphabetically, negative number if the reverse
+ *
+ ***********************************************************************/
 static Int16 DBStringCompare(void *rec1, void *rec2, Int16 other,
                         SortRecordInfoPtr rec1SortInfo,
                         SortRecordInfoPtr rec2SortInfo,
@@ -45,7 +55,53 @@ static Int16 DBStringCompare(void *rec1, void *rec2, Int16 other,
     return StrCompare((Char *)rec1, (Char *)rec2);
 }
 
-
+/***********************************************************************
+ *
+ * FUNCTION:     FindIfUsed
+ *
+ * DESCRIPTION:  Checks if an ingredient/unit is used in any recipes
+ *				 (or if it can be removed)
+ *
+ * PARAMETERS:   bitflag (0 = ingredient id, 1 = unit id), item ID
+ *				 (bitflag identifies what the item ID is a reference to)
+ *
+ * RETURNED:     true if item appears in any recipe entry, false otherwise
+ *
+ ***********************************************************************/
+Boolean FindIfUsed(UInt8 dbase, UInt32 itemId) {
+	UInt16 dbaseSize = DmNumRecords(gRecipeDB);
+	UInt16 listSize;
+	MemHandle recH;
+	RecipeRecord *recP;
+	UInt16 i;
+	UInt16 j;
+	
+	for (i = 0; i < dbaseSize; i++) {
+		recH = DmQueryRecord(gRecipeDB, i);
+		if (!recH) continue;
+		recP = MemHandleLock(recH);
+		
+		if (dbase == 0) {
+			listSize = sizeof(recP->ingredientIDs) / sizeof(UInt32);
+			for (j = 0; j < listSize; j++) {
+				if (recP->ingredientIDs[j] == itemId) {
+					return true;
+				}
+			}
+		}
+		else if (dbase == 1) {
+			listSize =  sizeof(recP->ingredientUnits) / sizeof(UInt32);
+			for (j = 0; j < listSize; j++) {
+				if (recP->ingredientUnits[j] == itemId) {
+					return true;
+				}
+			}
+		}
+		MemHandleUnlock(recH); 
+	}
+	
+	return false;
+}
 
 /*********************************************************************
  * External Functions
@@ -131,7 +187,9 @@ Err AddRecipe(
     const Char *ingredientNames[],
     const Char *unitNames[],
     UInt16 numIngredients,
-    const UInt16 counts[],
+    const UInt8 counts[],
+    const UInt8 fracs[],
+    const UInt8 denoms[],
     const Char *recipeSteps)
 {
     RecipeRecord recipe;
@@ -148,6 +206,8 @@ Err AddRecipe(
 	StrNCopy(recipe.name, recipeName, sizeof(recipe.name)-1);
     for (i = 0; i < numIngredients; i++) {
         recipe.ingredientCounts[i] = counts[i];
+        recipe.ingredientFracs[i] = fracs[i];
+        recipe.ingredientDenoms[i] = denoms[i];
 
         recipe.ingredientIDs[i] = IngredientIDByName(ingredientNames[i]);
         if (recipe.ingredientIDs[i] == -1) return dmErrResourceNotFound; 
@@ -188,29 +248,29 @@ Err AddRecipe(
  * RETURNED:     (Note: must be freed by calling function!)
  *
  ***********************************************************************/
-Boolean* QueryRecipes(UInt32 ingId) {
-	UInt16 numRecipes = DmNumRecords(gRecipeDB);
+MemHandle QueryRecipes(UInt32 ingId) {
 	Boolean *results;
-	UInt16 i;
+	MemHandle ret;
+	UInt16 numIngredients;
+	UInt16 numRecipes = DmNumRecords(gRecipeDB);
 	MemHandle recH;
 	RecipeRecord *recP;
+	UInt16 i;
 	UInt16 j;
-	UInt16 numIngredients;
-
-	results = MemPtrNew(numRecipes * sizeof(Boolean));
 	
-/*	if (!results) {
-		return memErrNotEnoughSpace;
-	}*/
-//Must figure out error handling another way
+	ret = MemHandleNew(numRecipes * sizeof(Boolean));
+	results = MemHandleLock(ret);
+	
+	if (!results) {
+		displayError(memErrNotEnoughSpace);
+		return NULL;
+	} //Could use improvement
 	
 	for (i = 0; i < numRecipes; i++) {
 		results[i] = false;
-		
 		recH = DmQueryRecord(gRecipeDB, i);
 		if (!recH) continue;
 		recP = MemHandleLock(recH);
-		
 		numIngredients = sizeof(recP->ingredientIDs) / sizeof(UInt32);
 		
 		for (j = 0; j < numIngredients; j++) {
@@ -220,8 +280,59 @@ Boolean* QueryRecipes(UInt32 ingId) {
 		MemHandleUnlock(recH); 
 	}
 	
-	return results;
+	MemHandleLock(ret);
+	return ret;
+}
 
+
+/***********************************************************************
+ *
+ * FUNCTION:     RemoveRecipe
+ *
+ * DESCRIPTION:  Removes recipe from database, and removes any ingredients/units
+ *				 from respective databases that only appear in deleted recipe
+ *
+ * PARAMETERS:   Index of recipe to remove
+ *
+ * RETURNED:     errNone or error
+ *
+ ***********************************************************************/
+Err RemoveRecipe(UInt16 recipeIndex) {
+	MemHandle recH;
+	RecipeRecord* recP;
+	Err err;
+	UInt16 listSize;
+	UInt16 index;
+	UInt16 j;
+	
+	// Removes recipe from database but gets MemHandle to data
+	err = DmDetachResource(gRecipeDB, recipeIndex, &recH); 
+	if (!(err == errNone)) return err;
+
+	recP = MemHandleLock(recH);
+	
+	listSize = sizeof(recP->ingredientIDs) / sizeof(UInt32);
+		
+	for (j = 0; j < listSize; j++) {
+		if (!(FindIfUsed(0, recP->ingredientIDs[j]))) {
+			err = DmFindRecordByID(gIngredientDB, recP->ingredientIDs[j], &index);
+			if (!(err == errNone)) return err;
+			DmDeleteRecord(gIngredientDB, index);
+		} 
+	}
+		
+	listSize = sizeof(recP->ingredientUnits) / sizeof(UInt32);
+		
+	for (j = 0; j < listSize; j++) {
+		if (!(FindIfUsed(1, recP->ingredientUnits[j]))) {
+			err = DmFindRecordByID(gUnitDB, recP->ingredientUnits[j], &index);
+			if (!(err == errNone)) return err;
+			DmDeleteRecord(gUnitDB, index);
+		} 
+	}
+
+	MemHandleFree(recH);
+	return errNone;
 }
 
 
@@ -241,13 +352,13 @@ Boolean* QueryRecipes(UInt32 ingId) {
 UInt32 IngredientIDByName(const Char *ingredientName)
 {
     UInt16 numRecords = DmNumRecords(gIngredientDB);
-    UInt16 i;
+    UInt32 entryID = 0;
     MemHandle recH;
     Char *recP;
-    UInt32 entryID = 0;
+    MemHandle newrecH;
+    Char *newrecP;
     UInt16 index;
-    MemHandle newRecH;
-    Char *newRecP;
+    UInt16 i;
 
     // Search existing records for a match
     for (i = 0; i < numRecords; i++) {
@@ -265,14 +376,14 @@ UInt32 IngredientIDByName(const Char *ingredientName)
 
     // No match found - create a new record
     index = DmFindSortPosition(gIngredientDB, (void *) ingredientName, 0, (DmComparF *) DBStringCompare, 0);
-    newRecH = DmNewRecord(gIngredientDB, &index, StrLen(ingredientName) + 1);
-    if (!newRecH) {
+    newrecH = DmNewRecord(gIngredientDB, &index, StrLen(ingredientName) + 1);
+    if (!newrecH) {
         return -1;
     }
 
-    newRecP = MemHandleLock(newRecH);
-    DmWrite(newRecP, 0, ingredientName, StrLen(ingredientName) + 1);
-    MemHandleUnlock(newRecH);
+    newrecP = MemHandleLock(newrecH);
+    DmWrite(newrecP, 0, ingredientName, StrLen(ingredientName) + 1);
+    MemHandleUnlock(newrecH);
     DmReleaseRecord(gIngredientDB, index, true);
 
     DmRecordInfo(gIngredientDB, index, NULL, &entryID, NULL);
@@ -292,16 +403,16 @@ UInt32 IngredientIDByName(const Char *ingredientName)
  ***********************************************************************/
 Err IngredientNameByID(UInt32 entryID, Char* buffer)
 {
+	MemHandle recH;
+	Char* recP;
 	UInt16 index;
-	MemHandle rech;
-	Char* recp;
 	
 	if (DmFindRecordByID(gIngredientDB, entryID, &index) == errNone) {
-		rech = DmQueryRecord(gIngredientDB, index);
-		if (rech) {
-			recp = MemHandleLock(rech);
-			StrCopy(buffer, recp);
-			MemHandleUnlock(rech);
+		recH = DmQueryRecord(gIngredientDB, index);
+		if (recH) {
+			recP = MemHandleLock(recH);
+			StrCopy(buffer, recP);
+			MemHandleUnlock(recH);
 			return errNone;
 		}
 	}
@@ -324,13 +435,13 @@ Err IngredientNameByID(UInt32 entryID, Char* buffer)
 UInt32 UnitIDByName(const Char *unitName)
 {
     UInt16 numRecords = DmNumRecords(gUnitDB);
-    UInt16 i;
+    UInt32 entryID = 0;
     MemHandle recH;
     Char *recP;
-    UInt32 entryID = 0;
+    MemHandle newrecH;
+    Char *newrecP;
     UInt16 index;
-    MemHandle newRecH;
-    Char *newRecP;
+    UInt16 i;
 
     // Search existing records for a match
     for (i = 0; i < numRecords; i++) {
@@ -348,14 +459,14 @@ UInt32 UnitIDByName(const Char *unitName)
 
     // No match found - create a new record
     index = DmFindSortPosition(gRecipeDB, (void *) unitName, 0, (DmComparF *) DBStringCompare, 0);
-    newRecH = DmNewRecord(gUnitDB, &index, StrLen(unitName) + 1);
-    if (!newRecH) {
+    newrecH = DmNewRecord(gUnitDB, &index, StrLen(unitName) + 1);
+    if (!newrecH) {
         return -1;
     }
 
-    newRecP = MemHandleLock(newRecH);
-    DmWrite(newRecP, 0, unitName, StrLen(unitName) + 1);
-    MemHandleUnlock(newRecH);
+    newrecP = MemHandleLock(newrecH);
+    DmWrite(newrecP, 0, unitName, StrLen(unitName) + 1);
+    MemHandleUnlock(newrecH);
     DmReleaseRecord(gUnitDB, index, true);
 
     DmRecordInfo(gUnitDB, index, NULL, &entryID, NULL);
@@ -375,16 +486,16 @@ UInt32 UnitIDByName(const Char *unitName)
  ***********************************************************************/
 Err UnitNameByID(UInt32 entryID, char* buffer)
 {
+	MemHandle recH;
+	Char* recP;
 	UInt16 index;
-	MemHandle rech;
-	Char* recp;
 	
 	if (DmFindRecordByID(gUnitDB, entryID, &index) == errNone) {
-		rech = DmQueryRecord(gUnitDB, index);
-		if (rech) {
-			recp = MemHandleLock(rech);
-			StrCopy(buffer, recp);
-			MemHandleUnlock(rech);
+		recH = DmQueryRecord(gUnitDB, index);
+		if (recH) {
+			recP = MemHandleLock(recH);
+			StrCopy(buffer, recP);
+			MemHandleUnlock(recH);
 			return errNone;
 		}
 	}

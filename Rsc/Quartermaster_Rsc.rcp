@@ -87,21 +87,11 @@ END
 ICONFAMILYEX
 BEGIN
     BITMAP "icon-lg-1.bmp" BPP 1 
-    BITMAP "icon-lg-2.bmp" BPP 2 
-    BITMAP "icon-lg-8.bmp" BPP 8 TRANSPARENTINDEX 210 COMPRESS
-    BITMAP "icon-lg-1-d144.bmp" BPP 1 DENSITY 2
-    BITMAP "icon-lg-2-d144.bmp" BPP 2 DENSITY 2
-    BITMAP "icon-lg-8-d144.bmp" BPP 8 TRANSPARENTINDEX 210 COMPRESS DENSITY 2
 END
 
 SMALLICONFAMILYEX
 BEGIN
     BITMAP "icon-sm-1.bmp"  BPP 1
-    BITMAP "icon-sm-2.bmp"  BPP 2
-    BITMAP "icon-sm-8.bmp"  BPP 8 TRANSPARENTINDEX 210 COMPRESS
-    BITMAP "icon-sm-1-d144.bmp" BPP 1 DENSITY 2
-    BITMAP "icon-sm-2-d144.bmp" BPP 2 DENSITY 2
-    BITMAP "icon-sm-8-d144.bmp" BPP 8 TRANSPARENTINDEX 210 COMPRESS DENSITY 2 
 END
 
 
@@ -118,7 +108,8 @@ NOFRAME MENUID MainMenuBar
 BEGIN
         TITLE "Recipes"
 	LIST "" ID RecipeList     AT (5 20 60 134) VISIBLEITEMS 12
-	BUTTON "View" ID btnViewRecipe  AT (99 23 AUTO AUTO)
+	BUTTON "View" ID RecipeListView   AT (99 23 AUTO AUTO)
+	BUTTON "Delete" ID RecipeListDelete   AT (96 43 AUTO AUTO)
 END
 
 ALERT ID ErrorAlert 
@@ -127,4 +118,32 @@ BEGIN
      TITLE "Error"
      MESSAGE "^2Error: ^1"
      BUTTONS "OK" 
+END
+
+
+
+FORM ID EditRecipeForm    AT ( 0 0 160 160 )
+NOFRAME
+BEGIN
+        TITLE "Edit Recipe"
+	
+	FIELD ID EditStepsField  AT (2 84 157 59) MAXCHARS 255 EDITABLE
+	BUTTON "Save" ID EditStepsOk  AT (3 145 AUTO AUTO)
+	BUTTON "Cancel" ID EditStepsCancel  AT (109 145 AUTO AUTO)
+	GRAFFITISTATEINDICATOR AT (151 147)
+	LABEL "Name:" AUTOID AT (1 19)
+	FIELD ID EditRecipeName  AT (28 16 129 12) MAXCHARS 255 EDITABLE
+	LABEL "Ingredients:" AUTOID AT (1 29)
+	LIST "" ID EditRecipeIngredients     AT (52 31 105 35) VISIBLEITEMS 3
+	BUTTON "Add" ID EditRecipeAdd  AT (52 68 AUTO AUTO)
+	LABEL "Steps:" AUTOID AT (1 72)
+	BUTTON "Delete" ID EditRecipeDelete  AT (117 68 AUTO AUTO)
+END
+
+ALERT ID ConfirmationAlert 
+CONFIRMATION DEFAULTBUTTON 1
+BEGIN
+     TITLE "Confirm Choice"
+     MESSAGE "Are you sure you would like to ^1?"
+     BUTTONS "Yes" "Cancel"
 END

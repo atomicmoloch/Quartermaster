@@ -155,7 +155,9 @@ static Err AppStart(void)
 	err = DatabaseOpen();
 		
 	if (err == errNone) {
-		UInt16 counts[2] = {2, 4};
+		UInt8 counts[2] = {2, 4};
+		UInt8 fracs[2] = {0};
+		UInt8 denoms[2] = {0};
 		const Char *units[2] = {"tbsp", ""};
 		const Char *ingredients[2] = {"Butter", "Eggs"};
    		const Char *steps =
@@ -164,7 +166,9 @@ static Err AppStart(void)
         "whites will be thoroughly set. Season with salt and pepper.";
 		
 		
-		UInt16 counts2[7] = {2, 2, 1, 1, 4, 1, 0};	
+		UInt8 counts2[7] = {2, 2, 1, 1, 4, 1, 0};	
+		UInt8 fracs2[7] = {0};
+		UInt8 denoms2[7] = {0};
 		const Char *units2[7] = {"tbsp", "tbsp", "cup", "cup", "", "tsp", "Few Grains"};
 		const Char *ingredients2[7] = {"Butter", "Flour", "Milk", "Cream", "Eggs", "Salt", "Cayenne"};
    		const Char *steps2 =
@@ -175,8 +179,8 @@ static Err AppStart(void)
         "Serve from baking dish. Egg souffle may be served with White Sauce I, highly seasoned with celery salt, paprika, and onion juice.";
         
         		
-		err = AddRecipe("Scrambled Eggs", ingredients, units, 2, counts, steps);
-        err = AddRecipe("Egg Souffle", ingredients2, units2, 7, counts2, steps2);
+		err = AddRecipe("Scrambled Eggs", ingredients, units, 2, counts, fracs, denoms, steps);
+        err = AddRecipe("Egg Souffle", ingredients2, units2, 7, counts2, fracs2, denoms2, steps2);
 	}
 	
 	return err;
@@ -188,7 +192,7 @@ static Err AppStart(void)
  * DESCRIPTION: Save the current state of the application.
  */
 
-static void AppStop(void)
+void AppStop(void)
 {
         
 	/* Close all the open forms. */

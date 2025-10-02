@@ -21,9 +21,9 @@
 #define appPrefVersionNum		0x01
 
 #define databaseCreatorID      'WOEM'
-#define databaseRecipeName     "RecipesDB-WOEM"
-#define databaseIngredientName "IngredientDB-WOEM"
-#define databaseUnitName 	   "UnitsDB-WOEM"
+#define databaseRecipeName     "QMRecipes"
+#define databaseIngredientName "QMIngredients"
+#define databaseUnitName 	   "QMUnits"
 #define recipeMaxIngredients    32
 
 
@@ -34,7 +34,9 @@
 // Recipe Record Structure
 typedef struct {
     Char name[32];
-    UInt16 ingredientCounts[recipeMaxIngredients];
+    UInt8 ingredientCounts[recipeMaxIngredients];
+    UInt8 ingredientFracs[recipeMaxIngredients];
+    UInt8 ingredientDenoms[recipeMaxIngredients];
     UInt32 ingredientIDs[recipeMaxIngredients];
     UInt32 ingredientUnits[recipeMaxIngredients];
 } RecipeRecord;
@@ -55,6 +57,7 @@ extern DmOpenRef gUnitDB;
  *********************************************************************/
 
 void * GetObjectPtr(UInt16 objectID);
+void AppStop();
  
 /*********************************************************************
  * Database.c functions
@@ -64,13 +67,14 @@ Err DatabaseOpen();
 void DatabaseClose();
 
 Err AddRecipe(const Char *recipeName, const Char *ingredientNames[],
-    const Char *unitNames[], UInt16 numIngredients, const UInt16 counts[],
-    const Char *recipeSteps);
+    const Char *unitNames[], UInt16 numIngredients, const UInt8 counts[],
+    const UInt8 fracs[], const UInt8 denoms[], const Char *recipeSteps);
 UInt32 IngredientIDByName(const Char *ingredientName);
 UInt32 UnitIDByName(const Char *ingredientName);
 Err IngredientNameByID(UInt32 entryID, char* buffer);
 Err UnitNameByID(UInt32 entryID, char* buffer);
-Boolean* QueryRecipes(UInt32 ingId);
+MemHandle QueryRecipes(UInt32 ingId);
+Err RemoveRecipe(UInt16 recipeIndex);
 
 /*********************************************************************
  * Main.c functions
@@ -97,5 +101,6 @@ UInt16 DrawRecipe(FormType *form);
 
 void displayError(Err code);
 void displayFatalError(Err code);
+Boolean confirmChoice(UInt8 dialogC);
 
 #endif /* QUARTERMASTER_H_ */

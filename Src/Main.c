@@ -16,24 +16,12 @@
 
 static void MainFormInit(FormType *frmP)
 {
-	FieldType *field;
-	const char *wizardDescription;
+/*	FieldType *field;
 	UInt16 fieldIndex;
 
 	fieldIndex = FrmGetObjectIndex(frmP, MainDescriptionField);
 	field = (FieldType *)FrmGetObjectPtr(frmP, fieldIndex);
-	FrmSetFocus(frmP, fieldIndex);
-
-	wizardDescription =
-		"C application\n"
-		"Creator Code: IVAK\n"
-		"\n"
-		"Other SDKs:\n"
-		;
-				
-	/* dont stack FldInsert calls, since each one generates a
-	 * fldChangedEvent, and multiple uses can overflow the event queue */
-	FldInsert(field, wizardDescription, StrLen(wizardDescription));
+	FrmSetFocus(frmP, fieldIndex); */
 }
 
 /*

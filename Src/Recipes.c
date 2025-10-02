@@ -7,12 +7,12 @@
  *********************************************************************/
 
 typedef struct {
-    Char **namePtrs;      // dynamically allocated array of string pointers
-    Char *nameStorage;    // single big memory block holding all recipe names
+    MemHandle namePtrs;      // dynamically allocated array of string pointers
+    MemHandle nameStorage;    // single big memory block holding all recipe names
     UInt16 numRecipes;    // how many recipes loaded
 } RecipeListContext;
 
-static RecipeListContext recipeListCtx = {0};
+static RecipeListContext ctx = {0};
 
 /*********************************************************************
  * Internal functions
@@ -31,27 +31,30 @@ static RecipeListContext recipeListCtx = {0};
  *
  ***********************************************************************/
 static Err PopulateRecipeList(ListType* list) {
-	UInt16 numRecords = DmNumRecords(gRecipeDB);
-    UInt16 i;
+ 	UInt16 numRecords = DmNumRecords(gRecipeDB);
+    Char *storagePtr;
+    Char **namePtr;
     MemHandle recH;
     RecipeRecord *recP;
-    Char *writePtr;
+    UInt16 i;
 
-    recipeListCtx.numRecipes = numRecords;
-    recipeListCtx.namePtrs = MemPtrNew(numRecords * sizeof(Char *));
+
+    ctx.numRecipes = numRecords;
+    ctx.namePtrs = MemHandleNew(numRecords * sizeof(Char *));
     
-    if (!recipeListCtx.namePtrs) {
+    if (!ctx.namePtrs) {
         return memErrNotEnoughSpace;
     }
 
-    recipeListCtx.nameStorage = MemPtrNew(numRecords * 32);
-    if (!recipeListCtx.nameStorage) {
-        MemPtrFree(recipeListCtx.namePtrs);
-        recipeListCtx.namePtrs = NULL;
+    ctx.nameStorage = MemHandleNew(numRecords * 32);
+    if (!ctx.nameStorage) {
+        MemHandleFree(ctx.namePtrs);
+        ctx.namePtrs = NULL;
         return memErrNotEnoughSpace;
     }
 
-    writePtr = recipeListCtx.nameStorage;
+    storagePtr = MemHandleLock(ctx.nameStorage);
+    namePtr = MemHandleLock(ctx.namePtrs);
 
     for (i = 0; i < numRecords; i++) {
         recH = DmQueryRecord(gRecipeDB, i);
@@ -59,17 +62,17 @@ static Err PopulateRecipeList(ListType* list) {
 
         recP = MemHandleLock(recH);
 
-        StrNCopy(writePtr, recP->name, 31);
-        writePtr[31] = '\0';
-
-        recipeListCtx.namePtrs[i] = writePtr;
-        writePtr += 32;  // advance to next slot
-
+        StrNCopy(storagePtr, recP->name, 31);
+        storagePtr[31] = '\0';
+        namePtr[i] = storagePtr;
+        storagePtr += 32;  // advance to next slot
         MemHandleUnlock(recH);
     }
-
-    LstSetListChoices(list, (Char **)recipeListCtx.namePtrs, numRecords);
+    
+    LstSetListChoices(list, namePtr, numRecords);
     LstDrawList(list);
+    MemHandleUnlock(ctx.nameStorage);
+    MemHandleUnlock(ctx.namePtrs);
     return errNone;
 }
 
@@ -86,14 +89,24 @@ static Err PopulateRecipeList(ListType* list) {
  ***********************************************************************/
 
 static Boolean RecipeListDoButtonCommand(UInt16 command) {
+    FormPtr frmP = FrmGetActiveForm();
 	Boolean handled = false;
 	Int16 selection;
     MemHandle recH;
     ListType* list;
-    FormPtr frmP = FrmGetActiveForm();
 	
 	switch (command) {
-	   	case btnViewRecipe:
+	   	case RecipeListView:
+	   		list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
+	   		selection = LstGetSelection(list);
+			if (selection != noListSelection) {
+				recH = DmQueryRecord(gRecipeDB, selection);
+				OpenRecipeForm(recH);
+			}
+	   		handled = true;
+	   		break;
+	   		
+	   	case RecipeListDelete:
 	   		list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
 	   		selection = LstGetSelection(list);
 			if (selection != noListSelection) {
@@ -127,8 +140,8 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
  ***********************************************************************/
 
 Boolean RecipeListHandleEvent(EventPtr eventP) {
-   Boolean handled = false;
    FormPtr frmP = FrmGetActiveForm();
+   Boolean handled = false;
    ListType* list;
 
 	switch (eventP->eType) {
@@ -144,10 +157,10 @@ Boolean RecipeListHandleEvent(EventPtr eventP) {
 			break;
 			
 		case frmCloseEvent:
-	        MemPtrFree(recipeListCtx.namePtrs);
-	        recipeListCtx.namePtrs = NULL;
-	        MemPtrFree(recipeListCtx.nameStorage);
-       		recipeListCtx.nameStorage = NULL;
+	        MemHandleFree(ctx.namePtrs);
+	        ctx.namePtrs = NULL;
+	        MemHandleFree(ctx.nameStorage);
+       		ctx.nameStorage = NULL;
 			break;
 			
 		case menuEvent: //Likely change later

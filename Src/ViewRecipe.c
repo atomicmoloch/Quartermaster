@@ -15,6 +15,34 @@ typedef struct {
 
 static RecipeFormContext ctx;
 
+
+/*********************************************************************
+ * Internal functions
+ *********************************************************************/
+
+/***********************************************************************
+ *
+ * FUNCTION:     FormatQuantity
+ *
+ * DESCRIPTION:  Builds string for recipe unit quantity, based on if a
+ *				 fractional component is specified
+ *
+ * PARAMETERS:   output buffer, whole unit component, fraction components
+ *
+ * RETURNED:     nothing (writes to buffer)
+ *
+ ***********************************************************************/
+static void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom) {
+    if (count == 0 && frac == 0)
+        out[0] = '\0';
+    else if (frac == 0)
+        StrPrintF(out, "%u", count);
+    else if (count == 0)
+        StrPrintF(out, "%u/%u", frac, denom);
+    else
+        StrPrintF(out, "%u %u/%u", count, frac, denom);
+}
+
 /*********************************************************************
  * External functions
  *********************************************************************/
@@ -30,20 +58,20 @@ static RecipeFormContext ctx;
  * RETURNED:     content height (used in initial maxScroll calculation)
  *
  ***********************************************************************/
-
 UInt16 DrawRecipe(FormType *form)
 {
-    RectangleType r;
-    UInt16 y;
+    RecipeRecord *recipeP = MemHandleLock(ctx.recipe);
     Char buf[64];
     Char namebuf[32];
     Char unitbuf[16];
-    RecipeRecord *recipeP = MemHandleLock(ctx.recipe);
-    UInt16 i;
+	Char qtyBuf[32];
     Char *lineStart;
-    UInt16 lineBreakOffset;
     Char *lineEnd;
+    UInt16 lineBreakOffset;
+    RectangleType r;
     UInt16 len;
+    UInt16 y;
+    UInt16 i;
     
     // Get drawing rectangle
     FrmGetObjectBounds(form, FrmGetObjectIndex(form, ViewRecipeScrollbar), &r);
@@ -62,26 +90,24 @@ UInt16 DrawRecipe(FormType *form)
     // Draw ingredients
     FntSetFont(stdFont);
     for (i = 0; i < recipeMaxIngredients && recipeP->ingredientIDs[i] != 0; i++) {
-        // Format: "count unit ingredient"
         IngredientNameByID(recipeP->ingredientIDs[i], namebuf);
         UnitNameByID(recipeP->ingredientUnits[i], unitbuf);
-        if (recipeP->ingredientCounts[i] == 0) {
-        	StrPrintF(buf, "%s %s", 
-                unitbuf,
-                namebuf);
-        }
-        else {
-        	StrPrintF(buf, "%u %s %s", 
-                recipeP->ingredientCounts[i],
-                unitbuf,
-                namebuf);
-        }
+        
+		FormatQuantity(qtyBuf, recipeP->ingredientCounts[i],
+                       recipeP->ingredientFracs[i],
+                       recipeP->ingredientDenoms[i]);
+		if (qtyBuf[0] != '\0')
+			// Allows unitless ingredients (e.g. pinch salt)
+   			StrPrintF(buf, "%s %s %s", qtyBuf, unitbuf, namebuf);
+		else
+    		StrPrintF(buf, "%s %s", unitbuf, namebuf);
+        
         if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(buf, StrLen(buf), 0, y);
         y += FntLineHeight();
     }
     y += 4;
 
-    // Draw steps (multi-line)
+    // Draw steps
     lineStart = (Char*)recipeP + sizeof(RecipeRecord);
     while (*lineStart) {
         lineEnd = lineStart;
@@ -117,8 +143,8 @@ UInt16 DrawRecipe(FormType *form)
  *
  ***********************************************************************/
 Boolean ViewRecipeHandleEvent(EventPtr eventP) {
-	Boolean handled = false;
 	FormPtr frmP = FrmGetActiveForm();
+	Boolean handled = false;
 	RectangleType r;
 	Coord displayHeight;
 	Coord contentHeight;

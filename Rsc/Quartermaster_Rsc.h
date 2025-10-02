@@ -1,6 +1,16 @@
 /* pilrc generated file.  Do not edit!*/
-#define ErrorAlert 1020
-#define btnViewRecipe 1019
+#define ConfirmationAlert 1033
+#define EditRecipeDelete 1032
+#define EditRecipeAdd 1030
+#define EditRecipeIngredients 1029
+#define EditRecipeName 1027
+#define EditStepsCancel 1025
+#define EditStepsOk 1024
+#define EditStepsField 1023
+#define EditRecipeForm 1022
+#define ErrorAlert 1021
+#define RecipeListDelete 1020
+#define RecipeListView 1019
 #define RecipeList 1018
 #define formRecipeList 1017
 #define ViewRecipeScrollbar 1016
