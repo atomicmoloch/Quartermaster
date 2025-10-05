@@ -160,31 +160,28 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
  ***********************************************************************/
 Boolean MainMenuDoCommand(UInt16 command)
 {
+	FormType * frmP;
 	Boolean handled = false;
 
 	switch (command)
 	{
 		case OptionsAboutQuartermaster:
-		{
-			FormType * frmP;
-
-			/* Clear the menu status from the display */
 			MenuEraseStatus(0);
 
-			/* Display the About Box. */
 			frmP = FrmInitForm (AboutForm);
 			FrmDoDialog (frmP);                    
 			FrmDeleteForm (frmP);
 
 			handled = true;
 			break;
-		}
-		case menuViewRecipes:
-		{
+		case ViewRecipes:
 			FrmGotoForm(formRecipeList);
 			handled = true;
 			break;	
-		}
+		case ViewPantry:
+			FrmGotoForm(formPantry);
+			handled = true;
+			break;	
 	}
 
 	return handled;
@@ -202,13 +199,14 @@ Boolean MainMenuDoCommand(UInt16 command)
  *
  ***********************************************************************/
 Boolean RecipeListHandleEvent(EventPtr eventP) {
-   FormPtr frmP = FrmGetActiveForm();
+   FormPtr frmP;
    Boolean handled = false;
    Err err;
    ListType* list;
 
 	switch (eventP->eType) {
 		case frmOpenEvent:
+			frmP = FrmGetActiveForm();
 			FrmDrawForm (frmP);
 			list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
 			err  = PopulateRecipeList(list);

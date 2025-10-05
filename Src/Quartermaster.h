@@ -24,6 +24,7 @@
 #define databaseRecipeName     "QMRecipes"
 #define databaseIngredientName "QMIngredients"
 #define databaseUnitName 	   "QMUnits"
+#define databasePantryName 	   "QMPantry"
 #define recipeMaxIngredients    32
 
 
@@ -50,6 +51,7 @@ typedef struct {
 extern DmOpenRef gRecipeDB;
 extern DmOpenRef gIngredientDB;
 extern DmOpenRef gUnitDB;
+extern DmOpenRef gPantryDB;
 
 /*********************************************************************
  * Quartermaster.c functions
@@ -74,6 +76,9 @@ Err IngredientNameByID(Char* buffer, UInt8 len, UInt32 entryID);
 Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID);
 MemHandle QueryRecipes(UInt32 ingId);
 Err RemoveRecipe(UInt16 recipeIndex);
+Err AddIdToDatabase(DmOpenRef dbase, UInt32 id);
+UInt16 IndexFromID(DmOpenRef dbase, UInt32 id);
+UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index);
 
 /*********************************************************************
  * RecipeList.c functions
@@ -97,6 +102,11 @@ Boolean EditRecipeHandleEvent(EventPtr eventP);
 Err OpenEditRecipeForm(UInt16 recipeIndex, Boolean isNew);
 Boolean AddIngredientHandleEvent(EventPtr eventP);
 Err AddIngredientForm();
+
+/*********************************************************************
+ * Pantry.c functions
+ *********************************************************************/
+Boolean PantryHandleEvent(EventPtr eventP);
 
 /*********************************************************************
  * Alerts.c functions

@@ -101,10 +101,9 @@ static Boolean AppHandleEvent(EventType * eventP)
 				FrmSetEventHandler(frmP, EditRecipeHandleEvent);
 				break;
 				
-			case formAddIngredient:
-				FrmSetEventHandler(frmP, AddIngredientHandleEvent);
+			case formPantry:
+				FrmSetEventHandler(frmP, PantryHandleEvent);
 				break;
-
 		}
 		return true;
 	}

@@ -1,0 +1,7 @@
+debug/
+Debug/
+Release/
+release/
+Debug/*
+Release/*
+Quartermaster_Data/Debug/

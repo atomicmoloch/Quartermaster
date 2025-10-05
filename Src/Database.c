@@ -9,6 +9,7 @@
 DmOpenRef gRecipeDB;
 DmOpenRef gIngredientDB;
 DmOpenRef gUnitDB;
+DmOpenRef gPantryDB;
 
 /*********************************************************************
  * Internal Functions
@@ -53,6 +54,31 @@ static Int16 DBStringCompare(void *rec1, void *rec2, Int16 other,
                         MemHandle appInfoH)
 {
     return StrCompare((Char *)rec1, (Char *)rec2);
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     DBIntCompare
+ *
+ * DESCRIPTION:  For DmFindSortPosition - compares database entries as integers
+ *
+ * PARAMETERS:   two UInt32 pointers
+ *
+ * RETURNED:     0 if strings match, positive number if rec1 sorts after
+ *				 rec2 alphabetically, negative number if the reverse
+ *
+ ***********************************************************************/
+static Int16 DBIntCompare(void *rec1, void *rec2, Int16 other,
+                        SortRecordInfoPtr rec1SortInfo,
+                        SortRecordInfoPtr rec2SortInfo,
+                        MemHandle appInfoH)
+{
+    if (*(UInt32 *)rec1 < *(UInt32 *)rec2)
+        return -1;
+    else if (*(UInt32 *)rec1 > *(UInt32 *)rec2)
+        return 1;
+    else
+        return 0;
 }
 
 /***********************************************************************
@@ -146,6 +172,15 @@ Err DatabaseOpen() {
     }
     gUnitDB = DmOpenDatabase(0, dbID, dmModeReadWrite);
     if (!gUnitDB) return DmGetLastErr();
+    
+    dbID = DmFindDatabase(0, databasePantryName);
+    if (!dbID) {
+        DmCreateDatabase(0, databasePantryName, databaseCreatorID, 'Data', false);
+        dbID = DmFindDatabase(0, databasePantryName);
+        if (!dbID) return dmErrCantOpen;
+    }
+    gPantryDB = DmOpenDatabase(0, dbID, dmModeReadWrite);
+    if (!gPantryDB) return DmGetLastErr();
 
     return errNone;
 }
@@ -460,7 +495,7 @@ UInt32 UnitIDByName(const Char *unitName)
 
     // If no match found creates new record
     index = DmFindSortPosition(gRecipeDB, (void *) unitName, 0, (DmComparF *) DBStringCompare, 0);
-    newrecH = DmNewRecord(gUnitDB, &index, StrLen(unitName) + 2);
+    newrecH = DmNewRecord(gUnitDB, &index, StrLen(unitName) + 1);
     if (!newrecH) {
         return -1;
     }
@@ -504,3 +539,57 @@ Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID)
 	
 	return dmErrCantFind;
 }
+
+/***********************************************************************
+ *
+ * FUNCTION:     IDFromIndex
+ *
+ * DESCRIPTION:  Utility function to convert between index and entry ID
+ *
+ * PARAMETERS:   database, index
+ *
+ * RETURNED:     id (or 0 if index is invalid)
+ *
+ ***********************************************************************/
+UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index)
+{
+    UInt32 id = 0;
+    Err err;
+    err = DmRecordInfo(dbase, index, NULL, &id, NULL);
+
+    if (err != errNone)
+        return 0;
+
+    return id;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     IndexFromID
+ *
+ * DESCRIPTION:  Utility function to convert between index and entry ID
+ *
+ * PARAMETERS:   database, id
+ *
+ * RETURNED:     index (or 0xFFFF if index is invalid)
+ *
+ ***********************************************************************/
+UInt16 IndexFromID(DmOpenRef dbase, UInt32 id)
+{
+    UInt16 index = 0xFFFF;
+    Err err;
+    err = DmFindRecordByID(dbase, id, &index);
+
+    if (err != errNone)
+        return 0xFFFF;
+
+    return index;
+}
+
+
+Err AddIdToDatabase(DmOpenRef dbase, UInt32 id)
+{
+	
+}
+
+

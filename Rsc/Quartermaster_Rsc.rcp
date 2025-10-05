@@ -9,9 +9,11 @@ BEGIN
 
 				PULLDOWN "View"
 	BEGIN
-		MENUITEM "Recipes" ID menuViewRecipes   "R"
+	MENUITEM "Recipes" ID ViewRecipes   "R"
+	MENUITEM "Pantry" ID ViewPantry   "P"
+	MENUITEM "List" ID ViewList  "L"
 END
-PULLDOWN "Options"
+PULLDOWN "Help"
 	BEGIN
 		MENUITEM "About Quartermaster" ID OptionsAboutQuartermaster
 	END
@@ -158,6 +160,26 @@ BEGIN
      	MENUITEM "Remove Ingredient" ID EditRecipeRemoveIng  
 	MENUITEM "Save" ID EditRecipeMenuSave
 	MENUITEM "Cancel" ID EditRecipeMenuCancel
+END
+     
+END
+
+FORM ID formPantry  AT ( 0 0 160 160 )
+NOFRAME MENUID menuPantry
+BEGIN
+        TITLE "Pantry"
+	LIST "" ID optionsList    AT (6 20 50 134) VISIBLEITEMS 12
+	LIST "" ID pantryList     AT (105 20 50 134) VISIBLEITEMS 12
+	BUTTON "Add >" ID PantryAdd  AT (64 20 AUTO AUTO)
+	BUTTON "< Del" ID PantryDelete  AT (65 41 AUTO AUTO)
+END
+
+MENU ID menuPantry 
+BEGIN
+     PULLDOWN "Search"
+     BEGIN
+          MENUITEM "Strict" ID StrictSearch  
+     	MENUITEM "Fuzzy Search" ID FuzzySearch  
 END
      
 END
