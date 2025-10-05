@@ -41,6 +41,42 @@ void displayFatalError(Err code) {
 
 /***********************************************************************
  *
+ * FUNCTION:     displayCustomError
+ *
+ * DESCRIPTION:  Displays non-fatal error message with custom message
+ *
+ * PARAMETERS:   Error code
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+void displayCustomError(UInt8 code) {
+	Char buf[64];
+	
+	switch(code) {
+		case 10:
+			StrCopy(buf, "ingredient name and steps cannot be blank");
+			break;
+			
+		case 11:
+			StrCopy(buf, "max number of ingredients reached");
+			break;
+			
+		case 12:
+			StrCopy(buf, "ingredient must have a name");
+			break;
+			
+		default:
+			StrCopy(buf, "[no dialogue specified]");
+			break;
+	
+	}
+
+	FrmCustomAlert(ErrorAlert, buf, NULL, NULL);
+}
+
+/***********************************************************************
+ *
  * FUNCTION:     confirmChoice
  *
  * DESCRIPTION:  Displays confirmation dialogue and returns user response

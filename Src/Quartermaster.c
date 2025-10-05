@@ -39,7 +39,6 @@
  * RETURNED:
  *     address of object as a void pointer
  */
-
 void * GetObjectPtr(UInt16 objectID)
 {
 	FormType * frmP;
@@ -71,7 +70,6 @@ void * GetObjectPtr(UInt16 objectID)
  *     true if the event was handled and should not be passed
  *     to a higher level handler.
  */
-
 static Boolean AppHandleEvent(EventType * eventP)
 {
 	UInt16 formId;
@@ -91,16 +89,20 @@ static Boolean AppHandleEvent(EventType * eventP)
 		 */
 		switch (formId)
 		{
-			case MainForm:
-				FrmSetEventHandler(frmP, MainFormHandleEvent);
-				break;
-				
 			case formRecipeList:
 				FrmSetEventHandler(frmP, RecipeListHandleEvent);
 				break;
 				
 			case formViewRecipe:
 				FrmSetEventHandler(frmP, ViewRecipeHandleEvent);
+				break;
+
+			case formEditRecipe:
+				FrmSetEventHandler(frmP, EditRecipeHandleEvent);
+				break;
+				
+			case formAddIngredient:
+				FrmSetEventHandler(frmP, AddIngredientHandleEvent);
 				break;
 
 		}
@@ -115,7 +117,6 @@ static Boolean AppHandleEvent(EventType * eventP)
  *
  * DESCRIPTION: This routine is the event loop for the application.
  */
-
 static void AppEventLoop(void)
 {
 	UInt16 error;
@@ -147,7 +148,6 @@ static void AppEventLoop(void)
  * RETURNED:
  *     errNone - if nothing went wrong
  */
-
 static Err AppStart(void)
 {
 	Err err;
@@ -191,7 +191,6 @@ static Err AppStart(void)
  *
  * DESCRIPTION: Save the current state of the application.
  */
-
 void AppStop(void)
 {
         
@@ -222,7 +221,6 @@ void AppStop(void)
  * RETURNED:
  *     error code or zero if ROM version is compatible
  */
-
 static Err RomVersionCompatible(UInt32 requiredVersion, UInt16 launchFlags)
 {
 	UInt32 romVersion;
@@ -272,7 +270,6 @@ static Err RomVersionCompatible(UInt32 requiredVersion, UInt16 launchFlags)
  * RETURNED:
  *     Result of launch, errNone if all went OK
  */
-
 UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 {
 	Err error;
@@ -291,7 +288,7 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 			 * start application by opening the main form
 			 * and then entering the main event loop 
 			 */
-			FrmGotoForm(MainForm);
+			FrmGotoForm(formRecipeList);
 			AppEventLoop();
 
 			AppStop();

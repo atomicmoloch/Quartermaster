@@ -22,33 +22,6 @@ static RecipeFormContext ctx;
 
 /***********************************************************************
  *
- * FUNCTION:     FormatQuantity
- *
- * DESCRIPTION:  Builds string for recipe unit quantity, based on if a
- *				 fractional component is specified
- *
- * PARAMETERS:   output buffer, whole unit component, fraction components
- *
- * RETURNED:     nothing (writes to buffer)
- *
- ***********************************************************************/
-static void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom) {
-    if (count == 0 && frac == 0)
-        out[0] = '\0';
-    else if (frac == 0)
-        StrPrintF(out, "%u", count);
-    else if (count == 0)
-        StrPrintF(out, "%u/%u", frac, denom);
-    else
-        StrPrintF(out, "%u %u/%u", count, frac, denom);
-}
-
-/*********************************************************************
- * External functions
- *********************************************************************/
-
-/***********************************************************************
- *
  * FUNCTION:     DrawRecipe
  *
  * DESCRIPTION:  Draws the recipe on screen, accounting for scrolling
@@ -58,13 +31,13 @@ static void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom) {
  * RETURNED:     content height (used in initial maxScroll calculation)
  *
  ***********************************************************************/
-UInt16 DrawRecipe(FormType *form)
+static UInt16 DrawRecipe(FormType *form)
 {
     RecipeRecord *recipeP = MemHandleLock(ctx.recipe);
-    Char buf[64];
+    Char buf[80];
     Char namebuf[32];
-    Char unitbuf[16];
-	Char qtyBuf[32];
+    Char unitbuf[32];
+	Char qtyBuf[16];
     Char *lineStart;
     Char *lineEnd;
     UInt16 lineBreakOffset;
@@ -73,16 +46,16 @@ UInt16 DrawRecipe(FormType *form)
     UInt16 y;
     UInt16 i;
     
-    // Get drawing rectangle
+    // Creates drawing window based on scrillbar
     FrmGetObjectBounds(form, FrmGetObjectIndex(form, ViewRecipeScrollbar), &r);
-    r.extent.x = r.topLeft.x;
+    r.extent.x  = r.topLeft.x;
     r.topLeft.x = 0;
     WinEraseRectangle(&r, 0);
     
 
     y = r.topLeft.y - ctx.scrollPos; // start at top minus scroll offset
 
-    // Draw recipe name (bold)
+    // Draw recipe name
     FntSetFont(boldFont);
     if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(recipeP->name, StrLen(recipeP->name), 0, y);
     y += FntLineHeight() + 2;
@@ -90,8 +63,8 @@ UInt16 DrawRecipe(FormType *form)
     // Draw ingredients
     FntSetFont(stdFont);
     for (i = 0; i < recipeMaxIngredients && recipeP->ingredientIDs[i] != 0; i++) {
-        IngredientNameByID(recipeP->ingredientIDs[i], namebuf);
-        UnitNameByID(recipeP->ingredientUnits[i], unitbuf);
+        IngredientNameByID(namebuf, 32, recipeP->ingredientIDs[i]);
+        UnitNameByID(unitbuf, 32, recipeP->ingredientUnits[i]);
         
 		FormatQuantity(qtyBuf, recipeP->ingredientCounts[i],
                        recipeP->ingredientFracs[i],
@@ -102,7 +75,15 @@ UInt16 DrawRecipe(FormType *form)
 		else
     		StrPrintF(buf, "%s %s", unitbuf, namebuf);
         
-        if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(buf, StrLen(buf), 0, y);
+        lineBreakOffset = FntWordWrap(buf, r.extent.x);
+        
+        if (lineBreakOffset < StrLen(buf)) {
+        	if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(buf, lineBreakOffset, 0, y);
+        	y += FntLineHeight();
+        	if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(((Char*)buf + lineBreakOffset), StrLen(((Char*)buf + lineBreakOffset)), 0, y);
+        } else {
+        	if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(buf, StrLen(buf), 0, y);
+        }
         y += FntLineHeight();
     }
     y += 4;
@@ -130,6 +111,37 @@ UInt16 DrawRecipe(FormType *form)
     MemHandleUnlock(ctx.recipe);
     return y;
 }
+
+/*********************************************************************
+ * External functions
+ *********************************************************************/
+
+/***********************************************************************
+ *
+ * FUNCTION:     FormatQuantity
+ *
+ * DESCRIPTION:  Builds string for recipe unit quantity, based on if a
+ *				 fractional component is specified
+ *				 NOTE: PalmOS doesn't have a StrNPrintF function
+ *				 However, since the max value for each parameter is 255,
+ *				 the max string length is 11
+ *
+ * PARAMETERS:   output buffer, whole unit component, fraction components
+ *
+ * RETURNED:     nothing (writes to buffer)
+ *
+ ***********************************************************************/
+void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom) {
+    if (count == 0 && frac == 0)
+        out[0] = '\0';
+    else if (frac == 0)
+        StrPrintF(out, "%u", count);
+    else if (count == 0)
+        StrPrintF(out, "%u/%u", frac, denom);
+    else
+        StrPrintF(out, "%u %u/%u", count, frac, denom);
+}
+
 
 /***********************************************************************
  *
@@ -175,7 +187,7 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
             return true;
             
 		case menuEvent: //Likely change later
-			return MainFormDoCommand(eventP->data.menu.itemID);
+			return MainMenuDoCommand(eventP->data.menu.itemID);
 			
 		case keyDownEvent:
 			FrmGetFormBounds(frmP, &r);
@@ -204,13 +216,13 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
  *
  * DESCRIPTION:  Opens and initializes ViewRecipe form to a given recipe
  *
- * PARAMETERS:   MemHandle to a recipe database entry
+ * PARAMETERS:   Index of recipeDB entry
  *
  * RETURNED:     nothing
  *
  ***********************************************************************/
-void OpenRecipeForm(MemHandle recipe) {
-    ctx.recipe = recipe;
+void OpenRecipeForm(UInt16 selection) {
+    ctx.recipe    = DmQueryRecord(gRecipeDB, selection);
     ctx.scrollPos = 0;
     ctx.maxScroll = 0;
     FrmGotoForm(formViewRecipe);

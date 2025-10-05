@@ -32,11 +32,11 @@ File:   31	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Rsc\Quarterm
 File:   32	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Quartermaster.c"
 File:   33	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Database.c"
 File:   34	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\ViewRecipe.c"
-File:   35	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Recipes.c"
-File:   36	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Main.c"
-File:   37	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Error.c"
+File:   35	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Alerts.c"
+File:   36	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\EditRecipe.c"
+File:   37	"C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\RecipeList.c"
 
-Segment:   1    6296 bytes  "Segment 1"
+Segment:   1   11226 bytes  "Segment 1"
 Code: 000004      12 bytes  "__DummyStartup__"               File: "__RuntimeModule__"
 Code: 000010      12 bytes  "__dthandler__4MTWKFv"           File: "NMWException.cp"
 Code: 00001c      12 bytes  "__duhandler__4MTWKFv"
@@ -52,62 +52,72 @@ Code: 000276       8 bytes  "__InitCode__"
 Code: 00027e     132 bytes  "__SkipToXREFs____4MTWKFPSc"
 Code: 000302     128 bytes  "__PatchV10Devices____4MTWKFP14SysAppInfoType"
 Code: 000382     234 bytes  "__LoadAndRelocate____4MTWKFUcP7_opaque"
-Code: 00046c      40 bytes  "GetObjectPtr"                   File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Quartermaster.c"
-Code: 000494     110 bytes  "AppHandleEvent"
-Code: 000502      90 bytes  "AppEventLoop"
-Code: 00055c    1050 bytes  "AppStart"
-Code: 000976      16 bytes  "AppStop"
-Code: 000986     288 bytes  "RomVersionCompatible"
-Code: 000aa6      80 bytes  "PilotMain"
-Code: 000af6      20 bytes  "CompareRecipeNames"             File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Database.c"
-Code: 000b0a      20 bytes  "DBStringCompare"
-Code: 000b1e     402 bytes  "DatabaseOpen"
-Code: 000cb0      56 bytes  "DatabaseClose"
-Code: 000ce8     442 bytes  "AddRecipe"
-Code: 000ea2     288 bytes  "IngredientIDByName"
-Code: 000fc2      96 bytes  "IngredientNameByID"
-Code: 001022     288 bytes  "UnitIDByName"
-Code: 001142      96 bytes  "UnitNameByID"
-Code: 0011a2     152 bytes  "FormatQuantity"                 File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\ViewRecipe.c"
-Code: 00123a     532 bytes  "DrawRecipe"
-Code: 00144e     352 bytes  "ViewRecipeHandleEvent"
-Code: 0015ae      30 bytes  "OpenRecipeForm"
-Code: 0015cc     244 bytes  "PopulateRecipeList"             File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Recipes.c"
-Code: 0016c0     102 bytes  "RecipeListDoButtonCommand"
-Code: 001726     148 bytes  "RecipeListHandleEvent"
-Code: 0017ba       8 bytes  "MainFormInit"                   File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Main.c"
-Code: 0017c2      84 bytes  "MainFormDoCommand"
-Code: 001816     130 bytes  "MainFormHandleEvent"
+Code: 00046c     130 bytes  "AppHandleEvent"                 File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Quartermaster.c"
+Code: 0004ee      90 bytes  "AppEventLoop"
+Code: 000548    1050 bytes  "AppStart"
+Code: 000962      16 bytes  "AppStop"
+Code: 000972     288 bytes  "RomVersionCompatible"
+Code: 000a92      80 bytes  "PilotMain"
+Code: 000ae2      20 bytes  "CompareRecipeNames"             File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Database.c"
+Code: 000af6      20 bytes  "DBStringCompare"
+Code: 000b0a     214 bytes  "FindIfUsed"
+Code: 000be0     402 bytes  "DatabaseOpen"
+Code: 000d72      56 bytes  "DatabaseClose"
+Code: 000daa     458 bytes  "AddRecipe"
+Code: 000f74     284 bytes  "RemoveRecipe"
+Code: 001090     288 bytes  "IngredientIDByName"
+Code: 0011b0     120 bytes  "IngredientNameByID"
+Code: 001228     288 bytes  "UnitIDByName"
+Code: 001348     120 bytes  "UnitNameByID"
+Code: 0013c0     676 bytes  "DrawRecipe"                     File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\ViewRecipe.c"
+Code: 001664     152 bytes  "FormatQuantity"
+Code: 0016fc     352 bytes  "ViewRecipeHandleEvent"
+Code: 00185c      40 bytes  "OpenRecipeForm"
+Code: 001884      44 bytes  "displayError"                   File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\Alerts.c"
+Code: 0018b0     248 bytes  "displayCustomError"
+Code: 0019a8     212 bytes  "confirmChoice"
+Code: 001a7c     158 bytes  "saveRecipe"                     File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\EditRecipe.c"
+Code: 001b1a     282 bytes  "DeleteIngredient"
+Code: 001c34     322 bytes  "AddIngredientForm"
+Code: 001d76     262 bytes  "EditRecipeDoCommand"
+Code: 001e7c    1498 bytes  "AddIngredientHandleEvent"
+Code: 002456     560 bytes  "EditRecipeHandleEvent"
+Code: 002686     532 bytes  "OpenEditRecipeForm"
+Code: 00289a     288 bytes  "PopulateRecipeList"             File: "C:\Users\President Taft\Documents\Palmdev\Quartermaster\Src\RecipeList.c"
+Code: 0029ba     286 bytes  "RecipeListDoButtonCommand"
+Code: 002ad8      84 bytes  "MainMenuDoCommand"
+Code: 002b2c     174 bytes  "RecipeListHandleEvent"
 
-Data section below A5:    182 bytes
+Data section below A5:    556 bytes
 Data section above A5:    168 bytes
 
 Initialized near data
-Data:    -28      28 bytes  "@134"
-Data:    -36       8 bytes  "@133"
-Data:    -42       5 bytes  "@132"
-Data:    -48       6 bytes  "@131"
-Data:    -54       5 bytes  "@130"
-Data:    -60       6 bytes  "@129"
-Data:    -88      28 bytes  "@127"
-Data:   -100      11 bytes  "@126"
-Data:   -104       4 bytes  "@125"
-Data:   -108       4 bytes  "@124"
-Data:   -116       8 bytes  "@115"
-Data:   -122       5 bytes  "@114"
-Data:   -130       7 bytes  "@113"
-Data:   -138       8 bytes  "@111"
-Data:   -139       1 bytes  "@110"
-Data:   -144       5 bytes  "@109"
+Data:    -28      28 bytes  "@135"
+Data:    -36       8 bytes  "@134"
+Data:    -42       5 bytes  "@133"
+Data:    -48       6 bytes  "@132"
+Data:    -54       5 bytes  "@131"
+Data:    -60       6 bytes  "@130"
+Data:    -88      28 bytes  "@128"
+Data:   -100      11 bytes  "@127"
+Data:   -104       4 bytes  "@126"
+Data:   -108       4 bytes  "@125"
+Data:   -116       8 bytes  "@116"
+Data:   -122       5 bytes  "@115"
+Data:   -130       7 bytes  "@114"
+Data:   -138       8 bytes  "@112"
+Data:   -139       1 bytes  "@111"
+Data:   -144       5 bytes  "@110"
 
 Uninitialized near data
 Data:   -148       4 bytes  "__CW_FEATURES_PTR"
 Data:   -152       4 bytes  "__global_destructor_chain"
-Data:   -162      10 bytes  "ctx"
-Data:   -170       8 bytes  "ctx"
-Data:   -174       4 bytes  "gRecipeDB"
-Data:   -178       4 bytes  "gIngredientDB"
-Data:   -182       4 bytes  "gUnitDB"
+Data:   -160       8 bytes  "ctx"
+Data:   -536     376 bytes  "ctx"
+Data:   -544       8 bytes  "ctx"
+Data:   -548       4 bytes  "gRecipeDB"
+Data:   -552       4 bytes  "gIngredientDB"
+Data:   -556       4 bytes  "gUnitDB"
 
 Initialized far data
 Data:     40     128 bytes  "__segtable__"
@@ -118,9 +128,9 @@ PRC DB Name:       Quartermaster
 PRC DB Version:    1
 Type:              appl
 Creator:           IVAK
-Resource Count:    17
-Creation Time:     2025-10-02 @ 1322
-Modification Time: 2025-10-02 @ 1322
+Resource Count:    19
+Creation Time:     2025-10-04 @ 1901
+Modification Time: 2025-10-04 @ 1901
 Last Backup Time:  
 Attributes:         0x00000009
                     dmHdrAttrResDB
@@ -130,18 +140,21 @@ Attributes:         0x00000009
 [Quartermaster]
 2:   tver           Application Version String         1000 (0x03e8)     4
 [1.0]
-3:   code           68K Object Code                    1 (0x0001)        6296
+3:   code           68K Object Code                    1 (0x0001)        11226
 4:   data           68K Global Data                    0 (0x0000)        252
 5:   code           68K Object Code                    0 (0x0000)        24
 6:   MBAR           Menu Bar                           1001 (0x03e9)     157
 7:   MBAR           Menu Bar                           1004 (0x03ec)     191
 8:   Talt           Alert                              1006 (0x03ee)     98
-9:   tFRM           Form                               1007 (0x03ef)     194
-10:   tFRM           Form                               1010 (0x03f2)     308
-11:   tAIB           Application Icon                   1000 (0x03e8)     104
-12:   tAIB           Application Icon                   1001 (0x03e9)     34
-13:   tFRM           Form                               1015 (0x03f7)     128
-14:   tFRM           Form                               1017 (0x03f9)     204
-15:   Talt           Alert                              1021 (0x03fd)     29
-16:   tFRM           Form                               1022 (0x03fe)     462
-17:   Talt           Alert                              1033 (0x0409)     69
+9:   tFRM           Form                               1007 (0x03ef)     252
+10:   tAIB           Application Icon                   1000 (0x03e8)     104
+11:   tAIB           Application Icon                   1001 (0x03e9)     34
+12:   tFRM           Form                               1012 (0x03f4)     128
+13:   tFRM           Form                               1014 (0x03f6)     266
+14:   Talt           Alert                              1020 (0x03fc)     29
+15:   tFRM           Form                               1021 (0x03fd)     398
+16:   Talt           Alert                              1031 (0x0407)     69
+17:   tFRM           Form                               1032 (0x0408)     592
+18:   tSTR           String                             1033 (0x0409)     153
+[Ingredient names should be in the plural form if applicable,...]
+19:   MBAR           Menu Bar                           1022 (0x03fe)     150

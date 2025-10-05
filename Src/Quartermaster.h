@@ -34,6 +34,7 @@
 // Recipe Record Structure
 typedef struct {
     Char name[32];
+    UInt8 numIngredients;
     UInt8 ingredientCounts[recipeMaxIngredients];
     UInt8 ingredientFracs[recipeMaxIngredients];
     UInt8 ingredientDenoms[recipeMaxIngredients];
@@ -44,8 +45,6 @@ typedef struct {
 /*********************************************************************
  * Global variables
  *********************************************************************/
- 
-//static UInt32 PantryIngredients[recipeMaxIngredients];
  
 // Database handles 
 extern DmOpenRef gRecipeDB;
@@ -71,36 +70,41 @@ Err AddRecipe(const Char *recipeName, const Char *ingredientNames[],
     const UInt8 fracs[], const UInt8 denoms[], const Char *recipeSteps);
 UInt32 IngredientIDByName(const Char *ingredientName);
 UInt32 UnitIDByName(const Char *ingredientName);
-Err IngredientNameByID(UInt32 entryID, char* buffer);
-Err UnitNameByID(UInt32 entryID, char* buffer);
+Err IngredientNameByID(Char* buffer, UInt8 len, UInt32 entryID);
+Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID);
 MemHandle QueryRecipes(UInt32 ingId);
 Err RemoveRecipe(UInt16 recipeIndex);
 
 /*********************************************************************
- * Main.c functions
+ * RecipeList.c functions
  *********************************************************************/
-Boolean MainFormDoCommand(UInt16 command);
-Boolean MainFormHandleEvent(EventType * eventP);
-
-/*********************************************************************
- * Recipes.c functions
- *********************************************************************/
- 
  Boolean RecipeListHandleEvent(EventPtr eventP);
+ Boolean MainMenuDoCommand(UInt16 command);
+ //Err PopulateRecipeList(ListType* list);
  
 /*********************************************************************
  * ViewRecipe.c functions
  *********************************************************************/
 Boolean ViewRecipeHandleEvent(EventPtr eventP); 
-void OpenRecipeForm(MemHandle recipe);
-UInt16 DrawRecipe(FormType *form);
+void OpenRecipeForm(UInt16 selection);
+void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom);
+//UInt16 DrawRecipe(FormType *form);
 
 /*********************************************************************
- * Error.c functions
+ * EditRecipe.c functions
+ *********************************************************************/
+Boolean EditRecipeHandleEvent(EventPtr eventP);
+Err OpenEditRecipeForm(UInt16 recipeIndex, Boolean isNew);
+Boolean AddIngredientHandleEvent(EventPtr eventP);
+Err AddIngredientForm();
+
+/*********************************************************************
+ * Alerts.c functions
  *********************************************************************/
 
 void displayError(Err code);
 void displayFatalError(Err code);
+void displayCustomError(UInt8 code);
 Boolean confirmChoice(UInt8 dialogC);
 
 #endif /* QUARTERMASTER_H_ */
