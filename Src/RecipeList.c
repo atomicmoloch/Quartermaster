@@ -33,7 +33,8 @@ static Err PopulateRecipeList(ListType* list) {
  	UInt16 numRecords = DmNumRecords(gRecipeDB);
  	Char* storagePtr;
     MemHandle recH;
-    RecipeRecord *recP;
+    MemPtr *recP;
+    RecipeRecord recipe;
     UInt16 i;
 
 	if (ctx.namePtrs) {
@@ -63,7 +64,8 @@ static Err PopulateRecipeList(ListType* list) {
         if (!recH) continue;
 
         recP = MemHandleLock(recH);
-        StrNCopy(storagePtr, recP->name, 15);
+        recipe = RecipeGetRecord(recP);
+        StrNCopy(storagePtr, recipe.name, 15);
         MemHandleUnlock(recH);
                 
         storagePtr[15] = '\0';

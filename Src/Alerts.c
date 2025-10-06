@@ -19,6 +19,21 @@ void displayError(Err code) {
 	SysErrString(code, buf, 64);
 	FrmCustomAlert(ErrorAlert, buf, NULL, NULL);
 }
+
+/***********************************************************************
+ *
+ * FUNCTION:     displayErrorIf
+ *
+ * DESCRIPTION:  Displays non-fatal error message if error is present
+ *
+ * PARAMETERS:   Error code
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+void displayErrorIf(Err code) {
+	if (code != errNone) displayError(code);
+}
  	
 /***********************************************************************
  *
@@ -55,7 +70,7 @@ void displayCustomError(UInt8 code) {
 	
 	switch(code) {
 		case 10:
-			StrCopy(buf, "ingredient name and steps cannot be blank");
+			StrCopy(buf, "recipe name cannot be blank");
 			break;
 			
 		case 11:
@@ -63,7 +78,7 @@ void displayCustomError(UInt8 code) {
 			break;
 			
 		case 12:
-			StrCopy(buf, "ingredient must have a name");
+			StrCopy(buf, "silly billy, your ingredient must have a name");
 			break;
 			
 		default:

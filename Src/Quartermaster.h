@@ -79,6 +79,8 @@ Err RemoveRecipe(UInt16 recipeIndex);
 Err AddIdToDatabase(DmOpenRef dbase, UInt32 id);
 UInt16 IndexFromID(DmOpenRef dbase, UInt32 id);
 UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index);
+RecipeRecord RecipeGetRecord(MemPtr recP);
+Char* RecipeGetStepsPtr(MemPtr recP);
 
 /*********************************************************************
  * RecipeList.c functions

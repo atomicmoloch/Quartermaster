@@ -180,7 +180,7 @@ static Err AppStart(void)
         		
 		err = AddRecipe("Scrambled Eggs", ingredients, units, 2, counts, fracs, denoms, steps);
         err = AddRecipe("Egg Souffle", ingredients2, units2, 7, counts2, fracs2, denoms2, steps2);
-	}
+	} 
 	
 	return err;
 }

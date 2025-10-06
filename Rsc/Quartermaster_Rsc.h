@@ -1,11 +1,11 @@
 /* pilrc generated file.  Do not edit!*/
 #define FuzzySearch 1060
 #define StrictSearch 1059
-#define menuPantry 1058
-#define PantryDelete 1057
-#define PantryAdd 1056
-#define pantryList 1055
-#define optionsList 1054
+#define PantryDelete 1058
+#define PantryAdd 1057
+#define pantryList 1056
+#define optionsList 1055
+#define menuPantry 1054
 #define formPantry 1053
 #define EditRecipeMenuCancel 1052
 #define EditRecipeMenuSave 1051

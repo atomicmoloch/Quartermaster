@@ -5,13 +5,67 @@
 typedef struct {
 	Char** ingredientNames;
 	Char*  ingredientStorage;
-	
-	Char** pantryNames;
-	Char*  pantryStorage;
 } PantryContext;
 
 static PantryContext ctx;
 
+/***********************************************************************
+ *
+ * FUNCTION:     DrawPantryList
+ *
+ * DESCRIPTION:  ListDrawFunction for pantry list (LstSetDrawFunction)
+ *
+ * PARAMETERS:   list index of item, drawing boundry
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+static void DrawPantryList(Int16 itemNum, RectanglePtr bounds, Char** data) {
+	MemHandle pantryH;
+	UInt32* pantryP;
+	MemHandle ingredientH;
+	Char* ingredientP;
+	UInt16 index;
+
+	if (itemNum >= DmNumRecords(gPantryDB)) return;
+	
+	pantryH = DmQueryRecord(gPantryDB, itemNum);
+	
+	if (!pantryH) return;
+	
+	pantryP = MemHandleLock(pantryH);
+	
+	if (DmFindRecordByID(gIngredientDB, *pantryP, &index) == errNone) {
+		ingredientH = DmQueryRecord(gIngredientDB, index);
+		if (ingredientH) {
+			ingredientP = MemHandleLock(ingredientH);
+			
+			WinDrawTruncChars(
+				ingredientP,
+				StrLen(ingredientP),
+				bounds->topLeft.x,
+				bounds->topLeft.y,
+				bounds->extent.x
+			);
+			MemHandleUnlock(ingredientH);
+		}
+	}
+	MemHandleUnlock(pantryH);
+	return;
+} 
+
+/***********************************************************************
+ *
+ * FUNCTION:     PopulateIngredientList
+ *
+ * DESCRIPTION:  Populates ingredient list with LstSetArrayChoices
+ *				 (may replace)
+ *
+ * PARAMETERS:   Form pointer
+ *
+ * RETURNED:     err
+ *
+ ***********************************************************************/
 static Err PopulateIngredientList(FormType *frmP) {
 	ListType *lst;
 	Boolean handled = false;
@@ -54,13 +108,25 @@ static Err PopulateIngredientList(FormType *frmP) {
 	    MemPtrResize(ctx.ingredientStorage, (storagePtr - ctx.ingredientStorage));
 	    LstSetListChoices(lst, ctx.ingredientNames, numRecords);
 	    LstDrawList(lst);
+	    LstSetSelection(lst, -1);
 	}
 	
 	return errNone;
 
 }
 
-static Err PantryDoCommand(UInt16 command) {
+/***********************************************************************
+ *
+ * FUNCTION:     PantryDoCommand
+ *
+ * DESCRIPTION:  Handles pantry button and menu events
+ *
+ * PARAMETERS:   button/menu item id
+ *
+ * RETURNED:     handled boolean
+ *
+ ***********************************************************************/
+static Boolean PantryDoCommand(UInt16 command) {
 	FormPtr frmP;
 	Boolean handled = false;
 	ListType* lst;
@@ -69,10 +135,13 @@ static Err PantryDoCommand(UInt16 command) {
 	switch(command) {
 		case PantryAdd:
 			frmP = FrmGetActiveForm();
-	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
+	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, optionsList));
 	   		selection = LstGetSelection(lst); 
 			if (selection != noListSelection) {
-				AddIdToDatabase(gPantryDB, IDFromIndex(gPantryDB, selection));
+				AddIdToDatabase(gPantryDB, IDFromIndex(gIngredientDB, selection));
+				lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryList));
+				LstSetListChoices(lst, NULL, DmNumRecords(gPantryDB));
+				LstDrawList(lst);
 			}
 			break;
 		case PantryDelete:
@@ -82,7 +151,17 @@ static Err PantryDoCommand(UInt16 command) {
 	return handled;
 }
 
-
+/***********************************************************************
+ *
+ * FUNCTION:     PantryHandleEvent
+ *
+ * DESCRIPTION:  Event handler for pantry
+ *
+ * PARAMETERS:   EventPtr
+ *
+ * RETURNED:     handled boolean
+ *
+ ***********************************************************************/
 Boolean PantryHandleEvent(EventPtr eventP) {
    FormPtr frmP;
    Boolean handled = false;
@@ -91,10 +170,18 @@ Boolean PantryHandleEvent(EventPtr eventP) {
 
 	switch (eventP->eType) {
 		case frmOpenEvent:
-			frmP = FrmGetActiveForm();
+			frmP = FrmGetActiveForm();			
 			FrmDrawForm (frmP);
+
 			err = PopulateIngredientList(frmP);
 			if (err != errNone) displayError(err);
+
+			lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryList));
+			LstSetListChoices(lst, NULL, DmNumRecords(gPantryDB));
+			LstSetDrawFunction(lst, DrawPantryList);
+	    	LstDrawList(lst);
+	    	LstSetSelection(lst, -1);
+
 			handled = true;
 			break;
 			
@@ -112,14 +199,6 @@ Boolean PantryHandleEvent(EventPtr eventP) {
 			if (ctx.ingredientStorage) {
 				MemPtrFree(ctx.ingredientStorage);
 				ctx.ingredientStorage = NULL;
-			}
-			if (ctx.pantryNames) {
-				MemPtrFree(ctx.pantryNames);
-				ctx.pantryNames = NULL;
-			}
-			if (ctx.pantryStorage) {
-				MemPtrFree(ctx.pantryStorage);
-				ctx.pantryStorage = NULL;
 			}
 			break;
 			

@@ -33,7 +33,8 @@ static RecipeFormContext ctx;
  ***********************************************************************/
 static UInt16 DrawRecipe(FormType *form)
 {
-    RecipeRecord *recipeP = MemHandleLock(ctx.recipe);
+    MemPtr *recipeP;
+    RecipeRecord recipe;
     Char buf[80];
     Char namebuf[32];
     Char unitbuf[32];
@@ -46,6 +47,9 @@ static UInt16 DrawRecipe(FormType *form)
     UInt16 y;
     UInt16 i;
     
+    recipeP = MemHandleLock(ctx.recipe);
+    recipe  = RecipeGetRecord(recipeP); 
+    
     // Creates drawing window based on scrillbar
     FrmGetObjectBounds(form, FrmGetObjectIndex(form, ViewRecipeScrollbar), &r);
     r.extent.x  = r.topLeft.x;
@@ -57,18 +61,18 @@ static UInt16 DrawRecipe(FormType *form)
 
     // Draw recipe name
     FntSetFont(boldFont);
-    if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(recipeP->name, StrLen(recipeP->name), 0, y);
+    if (y >= r.topLeft.y && y < r.topLeft.y + r.extent.y) WinDrawChars(recipe.name, StrLen(recipe.name), 0, y);
     y += FntLineHeight() + 2;
 
     // Draw ingredients
     FntSetFont(stdFont);
-    for (i = 0; i < recipeMaxIngredients && recipeP->ingredientIDs[i] != 0; i++) {
-        IngredientNameByID(namebuf, 32, recipeP->ingredientIDs[i]);
-        UnitNameByID(unitbuf, 32, recipeP->ingredientUnits[i]);
+    for (i = 0; i < recipeMaxIngredients && recipe.ingredientIDs[i] != 0; i++) {
+        IngredientNameByID(namebuf, 32, recipe.ingredientIDs[i]);
+        UnitNameByID(unitbuf, 32, recipe.ingredientUnits[i]);
         
-		FormatQuantity(qtyBuf, recipeP->ingredientCounts[i],
-                       recipeP->ingredientFracs[i],
-                       recipeP->ingredientDenoms[i]);
+		FormatQuantity(qtyBuf, recipe.ingredientCounts[i],
+                       recipe.ingredientFracs[i],
+                       recipe.ingredientDenoms[i]);
 		if (qtyBuf[0] != '\0')
 			// Allows unitless ingredients (e.g. pinch salt)
    			StrPrintF(buf, "%s %s %s", qtyBuf, unitbuf, namebuf);
@@ -89,7 +93,7 @@ static UInt16 DrawRecipe(FormType *form)
     y += 4;
 
     // Draw steps
-    lineStart = (Char*)recipeP + sizeof(RecipeRecord);
+    lineStart = RecipeGetStepsPtr(recipeP);
     while (*lineStart) {
         lineEnd = lineStart;
         len = 0;

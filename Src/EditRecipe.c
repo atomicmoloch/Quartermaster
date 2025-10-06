@@ -14,11 +14,11 @@ typedef struct {
     UInt8 ingredientFracs[recipeMaxIngredients];
     UInt8 ingredientDenoms[recipeMaxIngredients];
     
-    Char* ingredientNames[recipeMaxIngredients];
+    Char** ingredientNames;
     Char* ingredientStorage;
     UInt16 ingredientStorageSize;
     
-    Char* unitNames[recipeMaxIngredients];
+    Char** unitNames;
     Char* unitStorage;
     UInt16 unitStorageSize;
     
@@ -54,8 +54,9 @@ static Err saveRecipe() {
 	
 	name  = FldGetTextPtr(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeName)));
 	steps = FldGetTextPtr(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps)));
+	steps = (steps != NULL) ? steps : "";
 
-	if (!name || !steps) return dmErrInvalidParam;
+	if (!name) return dmErrInvalidParam;
 	if (!ctx.isNew) RemoveRecipe(ctx.recipeIndex);	
 	err = AddRecipe(name,
 			 (const Char**)ctx.ingredientNames,
@@ -276,17 +277,12 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 				break; 
 			case AddIngredientSave: 
 				frmP = FrmGetActiveForm();
-				fld    = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddName)); 
-				nameP  = FldGetTextPtr(fld);
-				fld    = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddUnit)); 
-				unitP  = FldGetTextPtr(fld);
+				nameP  = FldGetTextPtr(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddName))); 
+				unitP  = FldGetTextPtr(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddUnit)));
+				wholeP = FldGetTextPtr(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddWhole))); 
+				fracP  = FldGetTextPtr(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddFrac))); 
+				denomP = FldGetTextPtr(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddDenom)));
 				unitP = (unitP != NULL) ? unitP : "";
-				fld    = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddWhole)); 
-				wholeP = FldGetTextPtr(fld);
-				fld    = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddFrac)); 
-				fracP  = FldGetTextPtr(fld);
-				fld    = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, formAddDenom)); 
-				denomP = FldGetTextPtr(fld);
 				
 				if (nameP) {
 					ctx.ingredientCounts[ctx.numIngredients] = wholeP ? StrAToI(wholeP) : 0;
@@ -420,7 +416,8 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 	FormPtr frmP;
 	Boolean handled = false;
 	MemHandle recipeH = NULL;
-    RecipeRecord *recipeP = NULL;
+    MemPtr *recipeP = NULL;
+    RecipeRecord recipe;
     FieldType *fld;
     ListType *lst;
     Char *steps;
@@ -433,12 +430,14 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 			if (!ctx.isNew) {
 				recipeH = DmQueryRecord(gRecipeDB, ctx.recipeIndex);
 				recipeP = MemHandleLock(recipeH);
+				recipe = RecipeGetRecord(recipeP);
+				MemHandleUnlock(recipeH);
 				
 				fld = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeName));
-				FldInsert(fld, recipeP->name, StrLen(recipeP->name));
+				FldInsert(fld, recipe.name, StrLen(recipe.name));
 			
 	        	fld = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
-	        	steps = (Char*)recipeP + sizeof(RecipeRecord);
+	        	steps = RecipeGetStepsPtr(recipeP);
 	        	FldInsert(fld, steps, StrLen(steps));
 
 	        	lst = (ListType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeIngredients));
@@ -446,7 +445,6 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 			    LstDrawList(lst);
 			    LstSetSelection(lst, -1);
 			    
-			    MemHandleUnlock(recipeH);
 			}
 			handled = true;
 			break;
@@ -466,9 +464,17 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 			return EditRecipeDoCommand(eventP->data.menu.itemID);
 
 		case frmCloseEvent:
+			if (ctx.ingredientNames) {
+				MemPtrFree(ctx.ingredientNames);
+		       	ctx.ingredientNames = NULL;
+		    }
 			if (ctx.ingredientStorage) { 
 				MemPtrFree(ctx.ingredientStorage);
 		       	ctx.ingredientStorage = NULL;
+		    }
+			if (ctx.unitNames) {
+				MemPtrFree(ctx.unitNames);
+		       	ctx.unitNames = NULL;
 		    }
 			if (ctx.unitStorage) { 
 				MemPtrFree(ctx.unitStorage);
@@ -508,8 +514,9 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
  *
  ***********************************************************************/
 Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {    
-	RecipeRecord* recipeP = NULL;
     MemHandle recipeH = NULL;
+	MemPtr recipeP = NULL;
+	RecipeRecord recipe;
     Char buf[32];
     Char *storagePtr;
     UInt8 i;
@@ -522,29 +529,32 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
         recipeH = DmQueryRecord(gRecipeDB, selection);
         if (recipeH) {
             recipeP = MemHandleLock(recipeH);
-            ctx.numIngredients = recipeP->numIngredients;
+            recipe = RecipeGetRecord(recipeP);
+            MemHandleUnlock(recipeH);
+            ctx.numIngredients = recipe.numIngredients;
             
             if (ctx.numIngredients > 0) {
 				MemMove(ctx.ingredientCounts,
-					        recipeP->ingredientCounts,
+					        recipe.ingredientCounts,
 					        ctx.numIngredients * sizeof(UInt8));
 
 				MemMove(ctx.ingredientFracs,
-					        recipeP->ingredientFracs,
+					        recipe.ingredientFracs,
 					        ctx.numIngredients * sizeof(UInt8));
 
 				MemMove(ctx.ingredientDenoms,
-					        recipeP->ingredientDenoms,
+					        recipe.ingredientDenoms,
 					        ctx.numIngredients * sizeof(UInt8));
 	            
-	    		ctx.ingredientStorage = MemPtrNew(recipeP->numIngredients * 32);
+				ctx.ingredientNames   = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
+	    		ctx.ingredientStorage = MemPtrNew(recipe.numIngredients * 32);
 	            storagePtr            = ctx.ingredientStorage;
 	                
 	   			if (!ctx.ingredientNames || !ctx.ingredientStorage)
 	   				return memErrNotEnoughSpace;
 	    			                
-			    for (i = 0; i < recipeP->numIngredients; i++) {
-			        IngredientNameByID(buf, 32, recipeP->ingredientIDs[i]);
+			    for (i = 0; i < recipe.numIngredients; i++) {
+			        IngredientNameByID(buf, 32, recipe.ingredientIDs[i]);
 			        StrNCopy(storagePtr, buf, 31);
 					storagePtr[31] = '\0';
 					ctx.ingredientNames[i] = storagePtr;
@@ -554,14 +564,15 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
 				MemPtrResize(ctx.ingredientStorage, (storagePtr - ctx.ingredientStorage));
 				ctx.ingredientStorageSize = storagePtr - ctx.ingredientStorage;
 	                
-				ctx.unitStorage = MemPtrNew(recipeP->numIngredients * 32);
+				ctx.unitNames   = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
+				ctx.unitStorage = MemPtrNew(recipe.numIngredients * 32);
 	            storagePtr      = ctx.unitStorage;
 	                
 	            if (!ctx.unitNames || !ctx.unitStorage)
 	            	return memErrNotEnoughSpace;
 	                
-				for (i = 0; i < recipeP->numIngredients; i++) {
-			        UnitNameByID(buf, 32, recipeP->ingredientUnits[i]);
+				for (i = 0; i < recipe.numIngredients; i++) {
+			        UnitNameByID(buf, 32, recipe.ingredientUnits[i]);
 					StrNCopy(storagePtr, buf, 31);
 					storagePtr[31] = '\0';
 					ctx.unitNames[i] = storagePtr;
@@ -570,7 +581,6 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
 				MemPtrResize(ctx.unitStorage, (storagePtr - ctx.unitStorage));
 				ctx.unitStorageSize = storagePtr - ctx.unitStorage;
 			}
-            MemHandleUnlock(recipeH);
         }
     } 
 
