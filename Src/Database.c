@@ -43,7 +43,6 @@ static Int16 CompareRecipeNames(void *rec1, void *rec2, Int16 other,
                         SortRecordInfoPtr rec2SortInfo,
                         MemHandle appInfoH)
 {
-   // return StrCompare(((RecipeRecord *)rec1)->name, ((RecipeRecord *)rec2)->name);
    return StrCompare(((RecipeHeader *)rec1)->name, ((RecipeHeader *)rec2)->name);
 }
 
@@ -197,6 +196,10 @@ static Boolean FindIfUsed(UInt8 dbase, UInt32 itemId) {
 /*********************************************************************
  * External Functions
  *********************************************************************/
+ 
+ /*********************************************************************
+ * General DB Functions
+ *********************************************************************/
 
 /***********************************************************************
  *
@@ -268,6 +271,143 @@ void DatabaseClose() {
     if (gIngredientDB) DmCloseDatabase(gIngredientDB);
     if (gUnitDB)       DmCloseDatabase(gUnitDB);
 }
+
+/***********************************************************************
+ *
+ * FUNCTION:     IDFromIndex
+ *
+ * DESCRIPTION:  Utility function to convert between index and entry ID
+ *
+ * PARAMETERS:   database, index
+ *
+ * RETURNED:     id (or 0 if index is invalid)
+ *
+ ***********************************************************************/
+UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index)
+{
+    UInt32 id = 0;
+    Err err;
+    err = DmRecordInfo(dbase, index, NULL, &id, NULL);
+
+    if (err != errNone)
+        return 0;
+
+    return id;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     IndexFromID
+ *
+ * DESCRIPTION:  Utility function to convert between index and entry ID
+ *
+ * PARAMETERS:   database, id
+ *
+ * RETURNED:     index (or 0xFFFF if index is invalid)
+ *
+ ***********************************************************************/
+UInt16 IndexFromID(DmOpenRef dbase, UInt32 id)
+{
+    UInt16 index = 0xFFFF;
+    Err err;
+    err = DmFindRecordByID(dbase, id, &index);
+
+    if (err != errNone)
+        return 0xFFFF;
+
+    return index;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     AddIdToDatabase
+ *
+ * DESCRIPTION:  Checks if an identical entry already exists.
+ *				 If not, creates new database entry consisting of id
+ *
+ * PARAMETERS:   database, id
+ *
+ * RETURNED:     errNone if either entry is found or entry creation succeeds
+ *
+ ***********************************************************************/
+Err AddIdToDatabase(DmOpenRef dbase, UInt32 id)
+{
+    UInt16 index;
+    Err err;
+    MemHandle recH;
+    UInt32 *recP;
+
+    if (!dbase)
+        return dmErrInvalidParam;
+
+    index = DmFindSortPosition(dbase, &id, 0, (DmComparF *) DBIngredientIDCompare, 0);
+
+	if (index > 0) {
+		recH = DmQueryRecord(dbase, index - 1);
+		recP = MemHandleLock(recH);
+		
+		if (*recP == id) {
+			MemHandleUnlock(recH);
+			return errNone;
+			//id already in database, 
+		}
+		MemHandleUnlock(recH);
+		recP = NULL, recH = NULL;
+	}
+
+    recH = DmNewRecord(dbase, &index, sizeof(UInt32));
+    if (!recH)
+        return dmErrMemError;
+	recP = MemHandleLock(recH);
+	DmWrite(recP, 0, &id, sizeof(UInt32));
+    MemHandleUnlock(recH);
+
+    err = DmReleaseRecord(dbase, index, true);
+
+    return err;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     IDInDatabase
+ *
+ * DESCRIPTION:  Checks if an entry already exists.
+ *
+ * PARAMETERS:   database, id
+ *
+ * RETURNED:     boolean
+ *
+ ***********************************************************************/
+Boolean IDInDatabase(DmOpenRef dbase, UInt32 id)
+{
+    UInt16 index;
+    MemHandle recH;
+    UInt32 *recP;
+
+    if (!dbase)
+        return false;
+
+    index = DmFindSortPosition(dbase, &id, 0, (DmComparF *) DBIngredientIDCompare, 0);
+
+	if (index > 0) {
+		recH = DmQueryRecord(dbase, index - 1);
+		recP = MemHandleLock(recH);
+		
+		if (*recP == id) {
+			MemHandleUnlock(recH);
+			return true; 
+		}
+		MemHandleUnlock(recH);
+		recP = NULL, recH = NULL;
+	}
+
+	return false;
+}
+
+
+/*********************************************************************
+ * Recipe DB Functions
+ *********************************************************************/
 
 /***********************************************************************
  *
@@ -355,57 +495,6 @@ Err AddRecipe(
 	
 	return err;
 }
-
-/***********************************************************************
- *
- * FUNCTION:     QueryRecipes
- *
- * DESCRIPTION:  Queries recipe database to find recipes that use a specified
- *				 ingredient
- *
- * PARAMETERS:   Ingredient ID
- *
- * RETURNED:     Memhandle to Boolean array serving as a bitmask
- *				 (Note: must be freed by calling function!)
- *
- ***********************************************************************/
-MemHandle QueryRecipes(UInt32 ingId) {
-	Boolean *results;
-	MemHandle ret;
-	UInt16 numIngredients;
-	UInt16 numRecipes = DmNumRecords(gRecipeDB);
-	MemHandle recH;
-	MemPtr *recP;
-	RecipeRecord recipe;
-	UInt16 i;
-	UInt16 j;
-	
-	ret = MemHandleNew(numRecipes * sizeof(Boolean));
-	results = MemHandleLock(ret);
-	
-	if (!results) {
-		displayError(memErrNotEnoughSpace);
-		return NULL;
-	} //Could use improvement
-	
-	for (i = 0; i < numRecipes; i++) {
-		results[i] = false;
-		recH = DmQueryRecord(gRecipeDB, i);
-		if (!recH) continue;
-		recP = MemHandleLock(recH);
-		recipe = RecipeGetRecord(recP);
-		MemHandleUnlock(recH); 
-		numIngredients = sizeof(recipe.ingredientIDs) / sizeof(UInt32);
-		
-		for (j = 0; j < numIngredients; j++) {
-			if (recipe.ingredientIDs[j] == ingId) results[i] = true;
-		}
-	}
-	
-	MemHandleLock(ret);
-	return ret;
-}
-
 
 /***********************************************************************
  *
@@ -523,6 +612,10 @@ Char* RecipeGetStepsPtr(MemPtr recP)
 	return (Char*)recP + sizeof(RecipeHeader) + ingredientsLen;
 }
 
+/*********************************************************************
+ * Ingredient DB Functions
+ *********************************************************************/
+
 /***********************************************************************
  *
  * FUNCTION:     IngredientIDByName
@@ -616,6 +709,10 @@ Err IngredientNameByID(Char* buffer, UInt8 len, UInt32 entryID)
 	return dmErrCantFind;
 }
 
+/*********************************************************************
+ * Unit DB Functions
+ *********************************************************************/
+
 /***********************************************************************
  *
  * FUNCTION:     UnitIDByName
@@ -635,21 +732,6 @@ UInt32 UnitIDByName(const Char *unitName)
     MemHandle recH;
     Char *recP;
     UInt16 index;
-  //  UInt16 i;
-
-    // Search existing records for a match
-  /*  for (i = 0; i < numRecords; i++) {
-        recH = DmQueryRecord(gUnitDB, i);
-        if (recH) {
-	        recP = MemHandleLock(recH);
-	        if (StrCompare(recP, unitName) == 0) {
-	            DmRecordInfo(gUnitDB, i, NULL, &entryID, NULL);
-	            MemHandleUnlock(recH);
-	            return entryID;
-	        }
-        	MemHandleUnlock(recH);
-        }
-    } */
     
     index = DmFindSortPosition(gRecipeDB, (void *) unitName, 0, (DmComparF *) DBStringCompare, 0);
     
@@ -711,99 +793,56 @@ Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID)
 	return dmErrCantFind;
 }
 
-/***********************************************************************
- *
- * FUNCTION:     IDFromIndex
- *
- * DESCRIPTION:  Utility function to convert between index and entry ID
- *
- * PARAMETERS:   database, index
- *
- * RETURNED:     id (or 0 if index is invalid)
- *
- ***********************************************************************/
-UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index)
-{
-    UInt32 id = 0;
-    Err err;
-    err = DmRecordInfo(dbase, index, NULL, &id, NULL);
+/*********************************************************************
+ * Pantry DB Functions
+ *********************************************************************/
 
-    if (err != errNone)
-        return 0;
-
-    return id;
-}
 
 /***********************************************************************
  *
- * FUNCTION:     IndexFromID
+ * FUNCTION:     QueryRecipes
  *
- * DESCRIPTION:  Utility function to convert between index and entry ID
+ * DESCRIPTION:  Queries recipe database to find recipes that use a specified
+ *				 ingredient
  *
- * PARAMETERS:   database, id
- *
- * RETURNED:     index (or 0xFFFF if index is invalid)
  *
  ***********************************************************************/
-UInt16 IndexFromID(DmOpenRef dbase, UInt32 id)
-{
-    UInt16 index = 0xFFFF;
-    Err err;
-    err = DmFindRecordByID(dbase, id, &index);
-
-    if (err != errNone)
-        return 0xFFFF;
-
-    return index;
-}
-
-/***********************************************************************
- *
- * FUNCTION:     AddIdToDatabase
- *
- * DESCRIPTION:  Checks if an identical entry already exists.
- *				 If not, creates new database entry consisting of id
- *
- * PARAMETERS:   database, id
- *
- * RETURNED:     errNone if either entry is found or entry creation succeeds
- *
- ***********************************************************************/
-Err AddIdToDatabase(DmOpenRef dbase, UInt32 id)
-{
-    UInt16 index;
-    Err err;
-    MemHandle recH;
-    UInt32 *recP;
-
-    if (!dbase)
-        return dmErrInvalidParam;
-
-    index = DmFindSortPosition(dbase, &id, 0, (DmComparF *) DBIngredientIDCompare, 0);
-
-	if (index > 0) {
-		recH = DmQueryRecord(dbase, index - 1);
+UInt16 PantryFuzzySearch(MemHandle* ret) {
+	Boolean *results;
+	UInt16 numRecipes = DmNumRecords(gRecipeDB);
+	MemHandle recH;
+	MemPtr *recP;
+	RecipeRecord recipe;
+	UInt16 i;
+	UInt16 j;
+	UInt16 idx = 0;
+	
+	*ret = MemHandleNew(numRecipes * sizeof(UInt16));
+	results = MemHandleLock(*ret);
+	
+	if (!results) {
+		displayError(memErrNotEnoughSpace);
+		return NULL;
+	} //Could use improvement
+	
+	for (i = 0; i < numRecipes; i++) {
+		results[i] = false;
+		recH = DmQueryRecord(gRecipeDB, i);
+		if (!recH) continue;
 		recP = MemHandleLock(recH);
+		recipe = RecipeGetRecord(recP);
+		MemHandleUnlock(recH); 
 		
-		if (*recP == id) {
-			MemHandleUnlock(recH);
-			return errNone;
-			//id already in database, 
+		for (j = 0; j < recipe.numIngredients; j++) {
+			if (IDInDatabase(gPantryDB, recipe.ingredientIDs[j])) {
+				results[idx] = i;
+				idx++;
+				break; //only affects innermost loop
+			}
 		}
-		MemHandleUnlock(recH);
-		recP = NULL, recH = NULL;
 	}
-
-    recH = DmNewRecord(dbase, &index, sizeof(UInt32));
-    if (!recH)
-        return dmErrMemError;
-	recP = MemHandleLock(recH);
-	DmWrite(recP, 0, &id, sizeof(UInt32));
-    MemHandleUnlock(recH);
-
-    err = DmReleaseRecord(dbase, index, true);
-
-    return err;
+	
+	MemHandleLock(*ret);
+	MemHandleResize(*ret, idx * sizeof(UInt16));
+	return idx;
 }
-
-

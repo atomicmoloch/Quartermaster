@@ -5,13 +5,11 @@ RESETAUTOID 1000
 
 MENU ID MainMenuBar
 BEGIN
-    
-
-				PULLDOWN "View"
+	PULLDOWN "View"
 	BEGIN
-	MENUITEM "Recipes" ID ViewRecipes   "R"
-	MENUITEM "Pantry" ID ViewPantry   "P"
-	MENUITEM "List" ID ViewList  "L"
+		MENUITEM "Recipes" ID ViewRecipes   "R"
+		MENUITEM "Pantry" ID ViewPantry   "P"
+		MENUITEM "List" ID ViewList  "L"
 END
 PULLDOWN "Help"
 	BEGIN

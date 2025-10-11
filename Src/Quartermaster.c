@@ -123,7 +123,6 @@ static void AppEventLoop(void)
 
 	do 
 	{
-		/* change timeout if you need periodic nilEvents */
 		EvtGetEvent(&event, evtWaitForever);
 
 		if (! SysHandleEvent(&event))

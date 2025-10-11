@@ -51,7 +51,6 @@ static void DrawPantryList(Int16 itemNum, RectanglePtr bounds, Char** data) {
 		}
 	}
 	MemHandleUnlock(pantryH);
-	return;
 } 
 
 /***********************************************************************
@@ -83,9 +82,9 @@ static Err PopulateIngredientList(FormType *frmP) {
 	if (numRecords == 0) {
 		LstSetListChoices(lst, NULL, 0);
 	} else {
-	    ctx.ingredientNames    = MemPtrNew(numRecords * sizeof(Char *));
+	    ctx.ingredientNames   = MemPtrNew(numRecords * sizeof(Char *));
 	    ctx.ingredientStorage = MemPtrNew(numRecords * 16);
-	    storagePtr  = ctx.ingredientStorage;
+	    storagePtr            = ctx.ingredientStorage;
 
 	    if (!ctx.ingredientNames || !ctx.ingredientStorage) {
 	    	if (ctx.ingredientNames) MemPtrFree(ctx.ingredientNames);
@@ -131,6 +130,8 @@ static Boolean PantryDoCommand(UInt16 command) {
 	Boolean handled = false;
 	ListType* lst;
 	UInt16 selection;
+	MemHandle results;
+	UInt16 numResults;
 
 	switch(command) {
 		case PantryAdd:
@@ -145,6 +146,20 @@ static Boolean PantryDoCommand(UInt16 command) {
 			}
 			break;
 		case PantryDelete:
+			frmP = FrmGetActiveForm();
+	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryList));
+	   		selection = LstGetSelection(lst); 
+			if (selection != noListSelection) {
+				DmRemoveRecord(gPantryDB, selection); //maybe make more robust
+				lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryList));
+				LstSetListChoices(lst, NULL, DmNumRecords(gPantryDB));
+				LstDrawList(lst);
+			}
+			handled = true;
+			break;
+		case FuzzySearch:
+			numResults = PantryFuzzySearch(&results);
+			OpenRecipeList(results, numResults);
 			handled = true;
 			break;
 	}

@@ -81,12 +81,15 @@ UInt16 IndexFromID(DmOpenRef dbase, UInt32 id);
 UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index);
 RecipeRecord RecipeGetRecord(MemPtr recP);
 Char* RecipeGetStepsPtr(MemPtr recP);
+Boolean IDInDatabase(DmOpenRef dbase, UInt32 id);
+UInt16 PantryFuzzySearch(MemHandle* ret);
 
 /*********************************************************************
  * RecipeList.c functions
  *********************************************************************/
  Boolean RecipeListHandleEvent(EventPtr eventP);
  Boolean MainMenuDoCommand(UInt16 command);
+ void OpenRecipeList(MemHandle results, UInt16 num);
  //Err PopulateRecipeList(ListType* list);
  
 /*********************************************************************
@@ -115,6 +118,7 @@ Boolean PantryHandleEvent(EventPtr eventP);
  *********************************************************************/
 
 void displayError(Err code);
+void displayErrorIf(Err code);
 void displayFatalError(Err code);
 void displayCustomError(UInt8 code);
 Boolean confirmChoice(UInt8 dialogC);

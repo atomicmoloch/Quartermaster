@@ -7,8 +7,8 @@
  *********************************************************************/
 
 typedef struct {
-    Char** namePtrs;      // dynamically allocated array of string pointers
-    Char* nameStorage;    // single big memory block holding all recipe names
+	MemHandle results;
+	UInt16 numResults;
 } RecipeListContext;
 
 static RecipeListContext ctx = {0};
@@ -16,68 +16,89 @@ static RecipeListContext ctx = {0};
 /*********************************************************************
  * Internal functions
  *********************************************************************/
+ 
 
-/***********************************************************************
+static Int16 TranslateIndex(Int16 index) {
+	UInt16* resultP;
+
+	if (ctx.results == NULL) {
+		return index;
+	} else {
+		if (index >= ctx.numResults) return noListSelection;
+		resultP = MemHandleLock(ctx.results);
+		return resultP[index];
+		MemHandleUnlock(ctx.results);
+	}	
+} 
+ 
+ /***********************************************************************
  *
- * FUNCTION:     PopulateRecipeList
+ * FUNCTION:     DrawRecipeList
  *
- * DESCRIPTION:  Populates list containing names of all recipes in 
- *				 the recipe database
+ * DESCRIPTION:  ListDrawFunction for recipe list (LstSetDrawFunction)
  *
- * PARAMETERS:   Pointer to list
+ * PARAMETERS:   list index of item, drawing boundry
  *
- * RETURNED:     Err
+ * RETURNED:     nothing
  *
  ***********************************************************************/
-static Err PopulateRecipeList(ListType* list) {
- 	UInt16 numRecords = DmNumRecords(gRecipeDB);
- 	Char* storagePtr;
-    MemHandle recH;
-    MemPtr *recP;
-    RecipeRecord recipe;
-    UInt16 i;
-
-	if (ctx.namePtrs) {
-		MemPtrFree(ctx.namePtrs);
-	    ctx.namePtrs = NULL;
+static void DrawRecipeList(Int16 itemNum, RectanglePtr bounds, Char** data) {
+	UInt16* resultP;
+	MemHandle nameH;
+	Char* nameP;
+	
+	if (ctx.results == NULL) {
+		if (itemNum >= DmNumRecords(gRecipeDB)) return;
+	
+        nameH = DmQueryRecord(gRecipeDB, itemNum);
+        if (!nameH) return;
+        
+        nameP = MemHandleLock(nameH);
+        
+		WinDrawTruncChars(
+			nameP,
+			StrLen(nameP),
+			bounds->topLeft.x,
+			bounds->topLeft.y,
+			bounds->extent.x
+		);
+		
+		MemHandleUnlock(nameH);
+	} else {
+		if (itemNum >= ctx.numResults) return;
+		
+		resultP = MemHandleLock(ctx.results);
+	
+        nameH = DmQueryRecord(gRecipeDB, resultP[itemNum]);
+        MemHandleUnlock(ctx.results);
+        
+        if (!nameH) return;
+        
+        nameP = MemHandleLock(nameH);
+        
+		WinDrawTruncChars(
+			nameP,
+			StrLen(nameP),
+			bounds->topLeft.x,
+			bounds->topLeft.y,
+			bounds->extent.x
+		);
+		
+		MemHandleUnlock(nameH);
 	}
-	if (ctx.nameStorage) { 
-		MemPtrFree(ctx.nameStorage);
-       	ctx.nameStorage = NULL;
-    }
-    
-	if (numRecords == 0) {
-		LstSetListChoices(list, NULL, 0);
-		return errNone;
-	}
-
-    ctx.namePtrs    = MemPtrNew(numRecords * sizeof(Char *));
-    ctx.nameStorage = MemPtrNew(numRecords * 16);
-    storagePtr      = ctx.nameStorage;
-
-    if (!ctx.namePtrs || !ctx.nameStorage) {
-        return memErrNotEnoughSpace;
-    }
-    
-    for (i = 0; i < numRecords; i++) {
-        recH = DmQueryRecord(gRecipeDB, i);
-        if (!recH) continue;
-
-        recP = MemHandleLock(recH);
-        recipe = RecipeGetRecord(recP);
-        StrNCopy(storagePtr, recipe.name, 15);
-        MemHandleUnlock(recH);
-                
-        storagePtr[15] = '\0';
-        ctx.namePtrs[i] = storagePtr;
-        storagePtr += StrLen(storagePtr) + 1; //max 16
-    }
-    
-    MemPtrResize(ctx.nameStorage, (storagePtr - ctx.nameStorage));
-    LstSetListChoices(list, ctx.namePtrs, numRecords);
-    LstDrawList(list);
-    return errNone;
 }
+
+static Err PopulateRecipeList(ListType* lst) {
+	if (ctx.results == NULL)
+		LstSetListChoices(lst, NULL, DmNumRecords(gRecipeDB));
+	else
+		LstSetListChoices(lst, NULL, ctx.numResults);
+	LstSetDrawFunction(lst, DrawRecipeList);
+	LstDrawList(lst);
+	LstSetSelection(lst, -1);
+	
+	return errNone;
+} 
 
 /***********************************************************************
  *
@@ -100,7 +121,7 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 	switch (command) {
 	   	case RecipeListView:
 	   		list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
-	   		selection = LstGetSelection(list); //Should always be equivalent to the database index of selection
+	   		selection = TranslateIndex(LstGetSelection(list)); 
 			if (selection != noListSelection) {
 				OpenRecipeForm(selection);
 			}
@@ -109,7 +130,7 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 	   		
 	   	case RecipeListDelete:
 	   		list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
-	   		selection = LstGetSelection(list);
+	   		selection = TranslateIndex(LstGetSelection(list));
 			if (selection != noListSelection) {
 				if (confirmChoice(0)) {
 					err = RemoveRecipe(selection);
@@ -123,7 +144,7 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 	   		
 	   	case RecipeListEdit:
 	   		list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
-	   		selection = LstGetSelection(list);
+	   		selection = TranslateIndex(LstGetSelection(list));
 	   		if (selection != noListSelection) {
 	   	    	err = OpenEditRecipeForm(selection, false);
 	   	        if (err != errNone)
@@ -204,16 +225,17 @@ Boolean RecipeListHandleEvent(EventPtr eventP) {
    FormPtr frmP;
    Boolean handled = false;
    Err err;
-   ListType* list;
+   ListType* lst;
 
 	switch (eventP->eType) {
 		case frmOpenEvent:
 			frmP = FrmGetActiveForm();
 			FrmDrawForm (frmP);
-			list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
-			err  = PopulateRecipeList(list);
-			if (err != errNone) displayError(err);
-			handled = true;
+			
+			lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
+			err  = PopulateRecipeList(lst);
+			if (err != errNone) displayError(err);	
+			handled = true;	
 			break;
 			
 		case ctlSelectEvent:
@@ -221,14 +243,11 @@ Boolean RecipeListHandleEvent(EventPtr eventP) {
 			break;
 			
 		case frmCloseEvent:
-			if (ctx.namePtrs) {
-				MemPtrFree(ctx.namePtrs);
-			    ctx.namePtrs = NULL;
+			if (ctx.results) {
+				MemHandleFree(ctx.results);
+			    ctx.results = NULL;
 			}
-			if (ctx.nameStorage) { 
-				MemPtrFree(ctx.nameStorage);
-		       	ctx.nameStorage = NULL;
-		    }
+			ctx.numResults = 0;
 			break;
 			
 		case menuEvent: //Likely change later
@@ -238,4 +257,21 @@ Boolean RecipeListHandleEvent(EventPtr eventP) {
 			break;
 	}
 	return handled;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     OpenRecipeList
+ *
+ * DESCRIPTION:  Opens and initializes RecipeList with the results of a search query
+ *
+ * PARAMETERS:   MemHandle to list of recipe indices
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+void OpenRecipeList(MemHandle results, UInt16 num) {
+    ctx.results    = results;
+    ctx.numResults = num;
+    FrmGotoForm(formRecipeList);
 }
