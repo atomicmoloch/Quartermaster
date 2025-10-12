@@ -81,6 +81,10 @@ void displayCustomError(UInt8 code) {
 			StrCopy(buf, "silly billy, your ingredient must have a name");
 			break;
 			
+		case 30:
+			StrCopy(buf, "no recipes match search criteria");
+			break;
+			
 		default:
 			StrCopy(buf, "[no dialogue specified]");
 			break;

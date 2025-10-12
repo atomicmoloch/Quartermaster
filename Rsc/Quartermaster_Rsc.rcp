@@ -86,10 +86,11 @@ NOFRAME MENUID MainMenuBar
 BEGIN
         TITLE "Recipes"
 	LIST "" ID RecipeList     AT (5 20 77 134) VISIBLEITEMS 12
-	BUTTON "View" ID RecipeListView   AT (116 23 AUTO AUTO)
+	BUTTON "View" ID RecipeListView   AT (115 23 AUTO AUTO)
 	BUTTON "Delete" ID RecipeListDelete   AT (111 60 AUTO AUTO)
-	BUTTON "Edit" ID RecipeListEdit  AT (117 41 AUTO AUTO)
+	BUTTON "Edit" ID RecipeListEdit  AT (116 41 AUTO AUTO)
 	BUTTON "New" ID RecipeListNew  AT (115 79 AUTO AUTO)
+	BUTTON "Clear" ID RecipeListClear  AT (113 97 AUTO AUTO)
 END
 
 ALERT ID ErrorAlert 
@@ -176,7 +177,7 @@ MENU ID menuPantry
 BEGIN
      PULLDOWN "Search"
      BEGIN
-          MENUITEM "Strict" ID StrictSearch  
+          MENUITEM "Strict Search" ID StrictSearch  
      	MENUITEM "Fuzzy Search" ID FuzzySearch  
 END
      

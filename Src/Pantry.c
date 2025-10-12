@@ -157,9 +157,20 @@ static Boolean PantryDoCommand(UInt16 command) {
 			}
 			handled = true;
 			break;
+		case StrictSearch:
+			numResults = PantryStrictSearch(&results);
+			if (numResults > 0)
+				OpenRecipeList(results, numResults);
+			else
+				displayCustomError(30);
+			handled = true;
+			break;
 		case FuzzySearch:
 			numResults = PantryFuzzySearch(&results);
-			OpenRecipeList(results, numResults);
+			if (numResults > 0)
+				OpenRecipeList(results, numResults);
+			else
+				displayCustomError(30);
 			handled = true;
 			break;
 	}

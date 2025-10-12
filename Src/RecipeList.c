@@ -114,9 +114,9 @@ static Err PopulateRecipeList(ListType* lst) {
 static Boolean RecipeListDoButtonCommand(UInt16 command) {
     FormPtr frmP = FrmGetActiveForm();
 	Boolean handled = false;
-	Err err;
 	Int16 selection;
     ListType* list;
+	Err err;
 	
 	switch (command) {
 	   	case RecipeListView:
@@ -155,6 +155,18 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 
 	   	case RecipeListNew:
 			OpenEditRecipeForm(0, true);
+	   	    handled = true;
+	   	    break;
+	   	    
+	   	case RecipeListClear: // clear search results
+			if (ctx.results) {
+				MemHandleFree(ctx.results);
+			    ctx.results = NULL;
+			}
+			ctx.numResults = 0;
+			list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
+			err  = PopulateRecipeList(list);
+			if (err != errNone) displayError(err);	
 	   	    handled = true;
 	   	    break;
 

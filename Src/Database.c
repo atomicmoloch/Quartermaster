@@ -797,21 +797,23 @@ Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID)
  * Pantry DB Functions
  *********************************************************************/
 
-
 /***********************************************************************
  *
- * FUNCTION:     QueryRecipes
+ * FUNCTION:     PantryFuzzySearch
  *
- * DESCRIPTION:  Queries recipe database to find recipes that use a specified
- *				 ingredient
+ * DESCRIPTION:  Queries recipe database to find recipes that any ingredient
+ *				 in the pantry
  *
+ * PARAMETERS:   MemHandle pointer to store returned list of recipes
+ *
+ * RETURNED:     number of recipes that match
  *
  ***********************************************************************/
 UInt16 PantryFuzzySearch(MemHandle* ret) {
-	Boolean *results;
 	UInt16 numRecipes = DmNumRecords(gRecipeDB);
+	UInt16* results;
 	MemHandle recH;
-	MemPtr *recP;
+	MemPtr recP;
 	RecipeRecord recipe;
 	UInt16 i;
 	UInt16 j;
@@ -822,11 +824,10 @@ UInt16 PantryFuzzySearch(MemHandle* ret) {
 	
 	if (!results) {
 		displayError(memErrNotEnoughSpace);
-		return NULL;
+		return 0;
 	} //Could use improvement
 	
 	for (i = 0; i < numRecipes; i++) {
-		results[i] = false;
 		recH = DmQueryRecord(gRecipeDB, i);
 		if (!recH) continue;
 		recP = MemHandleLock(recH);
@@ -834,15 +835,73 @@ UInt16 PantryFuzzySearch(MemHandle* ret) {
 		MemHandleUnlock(recH); 
 		
 		for (j = 0; j < recipe.numIngredients; j++) {
-			if (IDInDatabase(gPantryDB, recipe.ingredientIDs[j])) {
+			if (IDInDatabase(gPantryDB, recipe.ingredientIDs[j])) { // checks in this manner because pantryDB has ingredients in sorted order
 				results[idx] = i;
 				idx++;
-				break; //only affects innermost loop
+				break; // only affects innermost loop
 			}
 		}
 	}
 	
-	MemHandleLock(*ret);
+	
+	MemHandleUnlock(*ret);
+	MemHandleResize(*ret, idx * sizeof(UInt16));
+	return idx;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     PantryStrictSearch
+ *
+ * DESCRIPTION:  Queries recipe database to find recipes that can
+ *				 be made with ingredients in pantry
+ *
+ * PARAMETERS:   MemHandle pointer to store returned list of recipes
+ *
+ * RETURNED:     number of recipes that match
+ *
+ ***********************************************************************/
+UInt16 PantryStrictSearch(MemHandle* ret) {
+	UInt16 numRecipes = DmNumRecords(gRecipeDB);
+	UInt16* results;
+	MemHandle recH;
+	MemPtr recP;
+	RecipeRecord recipe;
+	Boolean CanBeMade;
+	UInt16 i;
+	UInt16 j;
+	UInt16 idx = 0;
+	
+	*ret = MemHandleNew(numRecipes * sizeof(UInt16));
+	results = MemHandleLock(*ret);
+	
+	if (!results) {
+		displayError(memErrNotEnoughSpace);
+		return 0;
+	} 
+	
+	for (i = 0; i < numRecipes; i++) {
+		recH = DmQueryRecord(gRecipeDB, i);
+		if (!recH) continue;
+		recP = MemHandleLock(recH);
+		recipe = RecipeGetRecord(recP);
+		MemHandleUnlock(recH); 
+		
+		CanBeMade = true;
+		
+		for (j = 0; j < recipe.numIngredients; j++) {
+			if (!IDInDatabase(gPantryDB, recipe.ingredientIDs[j]))
+				CanBeMade = false;
+		}
+		
+		if (CanBeMade) {
+			results[idx] = i;
+			idx++;
+		}
+	}
+	
+	
+	MemHandleUnlock(*ret);
 	MemHandleResize(*ret, idx * sizeof(UInt16));
 	return idx;
 }
