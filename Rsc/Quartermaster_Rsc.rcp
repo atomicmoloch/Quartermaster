@@ -175,12 +175,17 @@ END
 
 MENU ID menuPantry 
 BEGIN
+	PULLDOWN "View"
+	BEGIN
+		MENUITEM "Recipes" ID ViewRecipes   "R"
+		MENUITEM "Pantry" ID ViewPantry   "P"
+		MENUITEM "Grocery List" ID ViewGrocery  "G"
+	END
      PULLDOWN "Search"
      BEGIN
           MENUITEM "Strict Search" ID StrictSearch  
      	MENUITEM "Fuzzy Search" ID FuzzySearch  
-END
-     
+	END    
 END
 
 FORM ID formGrocery  AT ( 0 0 160 160 )

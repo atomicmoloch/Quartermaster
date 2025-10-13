@@ -20,6 +20,7 @@ DmOpenRef gRecipeDB;
 DmOpenRef gIngredientDB;
 DmOpenRef gUnitDB;
 DmOpenRef gPantryDB;
+DmOpenRef gGroceryDB;
 
 /*********************************************************************
  * Internal Functions
@@ -250,6 +251,15 @@ Err DatabaseOpen() {
     }
     gPantryDB = DmOpenDatabase(0, dbID, dmModeReadWrite);
     if (!gPantryDB) return DmGetLastErr();
+    
+    dbID = DmFindDatabase(0, databaseGroceryName);
+    if (!dbID) {
+        DmCreateDatabase(0, databaseGroceryName, databaseCreatorID, 'Data', false);
+        dbID = DmFindDatabase(0, databaseGroceryName);
+        if (!dbID) return dmErrCantOpen;
+    }
+    gGroceryDB = DmOpenDatabase(0, dbID, dmModeReadWrite);
+    if (!gGroceryDB) return DmGetLastErr();
 
     return errNone;
 }

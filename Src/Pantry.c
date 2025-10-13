@@ -110,6 +110,10 @@ static Boolean PantryDoCommand(UInt16 command) {
 			handled = true;
 			break;
 	}
+	
+	if (!handled)
+		handled = MainMenuDoCommand(command);
+	
 	return handled;
 }
 

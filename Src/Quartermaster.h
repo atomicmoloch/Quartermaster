@@ -25,6 +25,7 @@
 #define databaseIngredientName "QMIngredients"
 #define databaseUnitName 	   "QMUnits"
 #define databasePantryName 	   "QMPantry"
+#define databaseGroceryName	   "QMGrocList"
 #define recipeMaxIngredients    32
 
 
@@ -52,6 +53,7 @@ extern DmOpenRef gRecipeDB;
 extern DmOpenRef gIngredientDB;
 extern DmOpenRef gUnitDB;
 extern DmOpenRef gPantryDB;
+extern DmOpenRef gGroceryDB;
 
 /*********************************************************************
  * Quartermaster.c functions

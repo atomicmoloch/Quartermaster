@@ -21,9 +21,6 @@ typedef struct {
     Char** unitNames;
     Char* unitStorage;
     UInt16 unitStorageSize;
-    
-	//Char** namePtrs;   //Ingredient names for add ingredient form
-	//Char* nameStorage; //(only loaded while add ingredient form open)
 
 } EditRecipeContext;
 
@@ -445,7 +442,7 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 	        	FldInsert(fld, steps, StrLen(steps));
 			}
 	        lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeIngredients));
-	       	LstSetListChoices(lst, NULL, 0);
+	       	LstSetListChoices(lst, NULL, ctx.numIngredients);
 		    LstSetDrawFunction(lst, DrawIngredientEntryList);
 		    LstDrawList(lst);
 		    LstSetSelection(lst, -1);
@@ -525,8 +522,10 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
     UInt8 i;
 
     MemSet(&ctx, sizeof(EditRecipeContext), 0);
-    ctx.isNew       = isNew;
-    ctx.recipeIndex = selection;
+    ctx.isNew             = isNew;
+    ctx.recipeIndex       = selection;
+	ctx.ingredientNames   = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
+	ctx.unitNames         = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
 
     if (!isNew) {
         recipeH = DmQueryRecord(gRecipeDB, selection);
@@ -548,8 +547,7 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
 				MemMove(ctx.ingredientDenoms,
 					        recipe.ingredientDenoms,
 					        ctx.numIngredients * sizeof(UInt8));
-	            
-				ctx.ingredientNames   = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
+	           
 	    		ctx.ingredientStorage = MemPtrNew(recipe.numIngredients * 32);
 	            storagePtr            = ctx.ingredientStorage;
 	                
@@ -567,7 +565,6 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
 				MemPtrResize(ctx.ingredientStorage, (storagePtr - ctx.ingredientStorage));
 				ctx.ingredientStorageSize = storagePtr - ctx.ingredientStorage;
 	                
-				ctx.unitNames   = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
 				ctx.unitStorage = MemPtrNew(recipe.numIngredients * 32);
 	            storagePtr      = ctx.unitStorage;
 	                
