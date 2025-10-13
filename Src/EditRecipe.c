@@ -22,8 +22,8 @@ typedef struct {
     Char* unitStorage;
     UInt16 unitStorageSize;
     
-	Char** namePtrs;   //Ingredient names for add ingredient form
-	Char* nameStorage; //(only loaded while add ingredient form open)
+	//Char** namePtrs;   //Ingredient names for add ingredient form
+	//Char* nameStorage; //(only loaded while add ingredient form open)
 
 } EditRecipeContext;
 
@@ -108,7 +108,6 @@ static Err DeleteIngredient(UInt16 index) {
 }
 
 
-
 /***********************************************************************
  *
  * FUNCTION:     AddIngredientForm
@@ -120,16 +119,13 @@ static Err DeleteIngredient(UInt16 index) {
  * RETURNED:     err
  *
  ***********************************************************************/
-Err AddIngredientForm() {
+static Err AddIngredientForm() {
 	FormType *frmP;
 	ListType *lst;
 	Boolean handled = false;
 	Boolean done = false;
 	UInt16 numRecords = DmNumRecords(gIngredientDB);
 	Char* storagePtr = NULL;
-    MemHandle recH;
-    Char* recP;
-	UInt16 i;
 
 	frmP = FrmInitForm(formAddIngredient);
 	FrmSetEventHandler(frmP, AddIngredientHandleEvent);
@@ -137,36 +133,11 @@ Err AddIngredientForm() {
 	FrmDrawForm(frmP);
 	lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, listAddIngredient));
 	
-    
-	if (numRecords == 0) {
-		LstSetListChoices(lst, NULL, 0);
-	} else {
-	    ctx.namePtrs    = MemPtrNew(numRecords * sizeof(Char *));
-	    ctx.nameStorage = MemPtrNew(numRecords * 16);
-	    storagePtr  = ctx.nameStorage;
-
-	    if (!ctx.namePtrs || !ctx.nameStorage) {
-	    	if (ctx.namePtrs) MemPtrFree(ctx.namePtrs);
-	        return memErrNotEnoughSpace;
-	    }
-	    
-	    for (i = 0; i < numRecords; i++) {
-	        recH = DmQueryRecord(gIngredientDB, i);
-	        if (!recH) continue;
-
-	        recP = MemHandleLock(recH);
-	        StrNCopy(storagePtr, recP, 15);
-	        MemHandleUnlock(recH);
-	                
-	        storagePtr[15] = '\0';
-	        ctx.namePtrs[i] = storagePtr;
-	        storagePtr += StrLen(storagePtr) + 1; //max 16
-	    }
-	    
-	    MemPtrResize(ctx.nameStorage, (storagePtr - ctx.nameStorage));
-	    LstSetListChoices(lst, ctx.namePtrs, numRecords);
-	    LstDrawList(lst);
-	}
+	LstSetListChoices(lst, NULL, DmNumRecords(gIngredientDB));
+	LstSetDrawFunction(lst, DrawIngredientList);
+	LstDrawList(lst);
+	LstSetSelection(lst, -1);
+	
 	return errNone;
 }
 
@@ -209,8 +180,10 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 				err = DeleteIngredient(selection);
 				if (err != errNone) displayError(err);
 			}
-			LstSetListChoices(lst, ctx.ingredientNames, ctx.numIngredients);
+			LstSetListChoices(lst, NULL, ctx.numIngredients);
+			// LstSetDrawFunction(lst, DrawIngredientEntryList);
 			LstDrawList(lst);
+			LstSetSelection(lst, -1);
 	   		handled = true;
 	   		break;
 	    case EditRecipeSave:
@@ -235,6 +208,47 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
  	
  	return handled;
 }
+
+/***********************************************************************
+ *
+ * FUNCTION:     DrawIngredientEntryList
+ *
+ * DESCRIPTION:  ListDrawFunction for edit recipe form
+ *
+ * PARAMETERS:   list index of item, drawing boundry
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+static void DrawIngredientEntryList(Int16 itemNum, RectanglePtr bounds, Char** data) {	
+    Char buf[50]; //16 chars each for quantity, unit, and name
+	Char qtyBuf[16];
+	Char unitBuf[16];
+	Char nameBuf[16];
+	
+	if (itemNum >= ctx.numIngredients) return;
+	
+	FormatQuantity(qtyBuf, ctx.ingredientCounts[itemNum],
+    			   ctx.ingredientFracs[itemNum],
+                   ctx.ingredientDenoms[itemNum]);
+ 	StrNCopy(unitBuf, ctx.unitNames[itemNum], 15);
+ 	StrNCopy(nameBuf, ctx.ingredientNames[itemNum], 15);       
+
+	if (qtyBuf[0] != '\0')
+		StrPrintF(buf, "%s %s %s", qtyBuf, unitBuf, nameBuf);
+	else
+    	StrPrintF(buf, "%s %s", unitBuf, nameBuf);              
+                   
+    buf[49] = '\0';
+ 
+	WinDrawTruncChars(
+		buf,
+		StrLen(buf),
+		bounds->topLeft.x,
+		bounds->topLeft.y,
+		bounds->extent.x
+	);
+} 
 
 /*********************************************************************
  * External functions
@@ -270,8 +284,6 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 	if (eventP->eType == ctlSelectEvent) {
 		switch (eventP->data.ctlSelect.controlID) {
 			case AddIngredientCancel: 
-				if (ctx.namePtrs) MemPtrFree(ctx.namePtrs);
-				if (ctx.nameStorage) MemPtrFree(ctx.nameStorage);
 				FrmReturnToForm(formEditRecipe);
 				handled = true;
 				break; 
@@ -303,8 +315,6 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 						if (err != errNone) {
 							displayError(err);
 							if (recP) MemPtrFree(recP);
-							if (ctx.namePtrs) MemPtrFree(ctx.namePtrs);
-							if (ctx.nameStorage) MemPtrFree(ctx.nameStorage);
 							FrmReturnToForm(formEditRecipe);
 							break;
 						}
@@ -346,8 +356,6 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 						if (err != errNone) {
 							displayError(err);
 							if (recP) MemPtrFree(recP);
-							if (ctx.namePtrs) MemPtrFree(ctx.namePtrs);
-							if (ctx.nameStorage) MemPtrFree(ctx.nameStorage);
 							FrmReturnToForm(formEditRecipe);
 							break;
 						}
@@ -364,8 +372,6 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 					}
 					
 					ctx.numIngredients++;
-					if (ctx.namePtrs) MemPtrFree(ctx.namePtrs);
-					if (ctx.nameStorage) MemPtrFree(ctx.nameStorage);
 					FrmReturnToForm(formEditRecipe);
 					
 				    MemSet(&event, sizeof(event), 0);
@@ -393,8 +399,6 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 		}
 	}
 	else if (eventP->eType == appStopEvent) { //maybe should handle formcloseevent instead? 
-		if (ctx.namePtrs) MemPtrFree(ctx.namePtrs);
-		if (ctx.nameStorage) MemPtrFree(ctx.nameStorage);
 		FrmReturnToForm(formEditRecipe);
 	}
 	
@@ -433,26 +437,25 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 				recipe = RecipeGetRecord(recipeP);
 				MemHandleUnlock(recipeH);
 				
-				fld = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeName));
+				fld = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeName));
 				FldInsert(fld, recipe.name, StrLen(recipe.name));
 			
-	        	fld = (FieldType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
+	        	fld = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
 	        	steps = RecipeGetStepsPtr(recipeP);
 	        	FldInsert(fld, steps, StrLen(steps));
-
-	        	lst = (ListType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeIngredients));
-			    LstSetListChoices(lst, ctx.ingredientNames, ctx.numIngredients);
-			    LstDrawList(lst);
-			    LstSetSelection(lst, -1);
-			    
 			}
+	        lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeIngredients));
+	       	LstSetListChoices(lst, NULL, 0);
+		    LstSetDrawFunction(lst, DrawIngredientEntryList);
+		    LstDrawList(lst);
+		    LstSetSelection(lst, -1);
 			handled = true;
 			break;
 		
         case frmUpdateEvent:
        		frmP = FrmGetActiveForm();
-        	lst = (ListType*)FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeIngredients));
-			LstSetListChoices(lst, ctx.ingredientNames, ctx.numIngredients);
+        	lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeIngredients));
+			LstSetListChoices(lst, NULL, ctx.numIngredients);
 			LstDrawList(lst);
 			LstSetSelection(lst, -1);
 			break;

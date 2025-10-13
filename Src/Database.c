@@ -720,7 +720,7 @@ Err IngredientNameByID(Char* buffer, UInt8 len, UInt32 entryID)
  * DESCRIPTION:  Returns database identifier of the unit with the
  *				 specified name, or creates a new entry
  *
- * PARAMETERS:   buffer to write to, buffer length, entry ID
+ * PARAMETERS:   unit name string
  *
  * RETURNED:     UnitDB ID of ingredient, or -1 if error
  *

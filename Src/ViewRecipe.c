@@ -122,33 +122,6 @@ static UInt16 DrawRecipe(FormType *form)
 
 /***********************************************************************
  *
- * FUNCTION:     FormatQuantity
- *
- * DESCRIPTION:  Builds string for recipe unit quantity, based on if a
- *				 fractional component is specified
- *				 NOTE: PalmOS doesn't have a StrNPrintF function
- *				 However, since the max value for each parameter is 255,
- *				 the max string length is 11
- *
- * PARAMETERS:   output buffer, whole unit component, fraction components
- *
- * RETURNED:     nothing (writes to buffer)
- *
- ***********************************************************************/
-void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom) {
-    if (count == 0 && frac == 0)
-        out[0] = '\0';
-    else if (frac == 0)
-        StrPrintF(out, "%u", count);
-    else if (count == 0)
-        StrPrintF(out, "%u/%u", frac, denom);
-    else
-        StrPrintF(out, "%u %u/%u", count, frac, denom);
-}
-
-
-/***********************************************************************
- *
  * FUNCTION:     ViewRecipeHandleEvent
  *
  * DESCRIPTION:  Event handler for formViewRecipe

@@ -56,9 +56,12 @@ extern DmOpenRef gPantryDB;
 /*********************************************************************
  * Quartermaster.c functions
  *********************************************************************/
-
-void * GetObjectPtr(UInt16 objectID);
+ 
 void AppStop();
+//Misc shared functions
+void DrawIngredientList(Int16 itemNum, RectanglePtr bounds, Char** data);
+void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom);
+Boolean MainMenuDoCommand(UInt16 command);
  
 /*********************************************************************
  * Database.c functions
@@ -89,7 +92,6 @@ UInt16 PantryStrictSearch(MemHandle* ret);
  * RecipeList.c functions
  *********************************************************************/
  Boolean RecipeListHandleEvent(EventPtr eventP);
- Boolean MainMenuDoCommand(UInt16 command);
  void OpenRecipeList(MemHandle results, UInt16 num);
  //Err PopulateRecipeList(ListType* list);
  
@@ -98,7 +100,6 @@ UInt16 PantryStrictSearch(MemHandle* ret);
  *********************************************************************/
 Boolean ViewRecipeHandleEvent(EventPtr eventP); 
 void OpenRecipeForm(UInt16 selection);
-void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom);
 //UInt16 DrawRecipe(FormType *form);
 
 /*********************************************************************
@@ -113,6 +114,11 @@ Err AddIngredientForm();
  * Pantry.c functions
  *********************************************************************/
 Boolean PantryHandleEvent(EventPtr eventP);
+
+/*********************************************************************
+ * GroceryList.c functions
+ *********************************************************************/
+Boolean GroceryHandleEvent(EventPtr eventP);
 
 /*********************************************************************
  * Alerts.c functions

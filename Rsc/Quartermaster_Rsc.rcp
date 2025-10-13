@@ -9,7 +9,7 @@ BEGIN
 	BEGIN
 		MENUITEM "Recipes" ID ViewRecipes   "R"
 		MENUITEM "Pantry" ID ViewPantry   "P"
-		MENUITEM "List" ID ViewList  "L"
+		MENUITEM "Grocery List" ID ViewGrocery  "G"
 END
 PULLDOWN "Help"
 	BEGIN
@@ -167,7 +167,7 @@ FORM ID formPantry  AT ( 0 0 160 160 )
 NOFRAME MENUID menuPantry
 BEGIN
         TITLE "Pantry"
-	LIST "" ID optionsList    AT (6 20 50 134) VISIBLEITEMS 12
+	LIST "" ID pantryOptionsList    AT (6 20 50 134) VISIBLEITEMS 12
 	LIST "" ID pantryList     AT (105 20 50 134) VISIBLEITEMS 12
 	BUTTON "Add >" ID PantryAdd  AT (64 20 AUTO AUTO)
 	BUTTON "< Del" ID PantryDelete  AT (65 41 AUTO AUTO)
@@ -181,4 +181,14 @@ BEGIN
      	MENUITEM "Fuzzy Search" ID FuzzySearch  
 END
      
+END
+
+FORM ID formGrocery  AT ( 0 0 160 160 )
+NOFRAME MENUID MainMenuBar
+BEGIN
+        TITLE "Grocery List"
+	LIST "" ID groceryOptionsList    AT (6 20 50 134) VISIBLEITEMS 12
+	LIST "" ID groceryList     AT (105 20 50 134) VISIBLEITEMS 12
+	BUTTON "Add >" ID GroceryAdd  AT (64 20 AUTO AUTO)
+	BUTTON "< Del" ID GroceryDelete  AT (65 41 AUTO AUTO)
 END

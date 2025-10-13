@@ -1,10 +1,15 @@
 /* pilrc generated file.  Do not edit!*/
+#define GroceryDelete 1066
+#define GroceryAdd 1065
+#define groceryList 1064
+#define groceryOptionsList 1063
+#define formGrocery 1062
 #define FuzzySearch 1061
 #define StrictSearch 1060
 #define PantryDelete 1059
 #define PantryAdd 1058
 #define pantryList 1057
-#define optionsList 1056
+#define pantryOptionsList 1056
 #define menuPantry 1055
 #define formPantry 1054
 #define EditRecipeMenuCancel 1053
@@ -46,7 +51,7 @@
 #define RomIncompatibleAlert 1008
 #define EditOnlyMenuBar 1006
 #define OptionsAboutQuartermaster 1005
-#define ViewList 1004
+#define ViewGrocery 1004
 #define ViewPantry 1003
 #define ViewRecipes 1002
 #define MainMenuBar 1001

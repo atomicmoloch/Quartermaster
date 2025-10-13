@@ -88,6 +88,18 @@ static void DrawRecipeList(Int16 itemNum, RectanglePtr bounds, Char** data) {
 	}
 }
 
+
+ /***********************************************************************
+ *
+ * FUNCTION:     PopulateRecipeList
+ *
+ * DESCRIPTION:  Redraws list after database or search result updates
+ *
+ * PARAMETERS:   listptr
+ *
+ * RETURNED:     err
+ *
+ ***********************************************************************/
 static Err PopulateRecipeList(ListType* lst) {
 	if (ctx.results == NULL)
 		LstSetListChoices(lst, NULL, DmNumRecords(gRecipeDB));
@@ -180,47 +192,6 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 /*********************************************************************
  * External functions
  *********************************************************************/
- 
- 
-/***********************************************************************
- *
- * FUNCTION:     MainMenuDoCommand
- *
- * DESCRIPTION:  Event handler for main menu shared across several forms
- *
- * PARAMETERS:   command
- *
- * RETURNED:     handled boolean
- *
- ***********************************************************************/
-Boolean MainMenuDoCommand(UInt16 command)
-{
-	FormType * frmP;
-	Boolean handled = false;
-
-	switch (command)
-	{
-		case OptionsAboutQuartermaster:
-			MenuEraseStatus(0);
-
-			frmP = FrmInitForm (AboutForm);
-			FrmDoDialog (frmP);                    
-			FrmDeleteForm (frmP);
-
-			handled = true;
-			break;
-		case ViewRecipes:
-			FrmGotoForm(formRecipeList);
-			handled = true;
-			break;	
-		case ViewPantry:
-			FrmGotoForm(formPantry);
-			handled = true;
-			break;	
-	}
-
-	return handled;
-}
 
 /***********************************************************************
  *

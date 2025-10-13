@@ -2,12 +2,9 @@
 #include "Quartermaster.h"
 #include "Quartermaster_Rsc.h"
 
-typedef struct {
-	Char** ingredientNames;
-	Char*  ingredientStorage;
-} PantryContext;
-
-static PantryContext ctx;
+/*********************************************************************
+ * Internal functions
+ *********************************************************************/
 
 /***********************************************************************
  *
@@ -55,67 +52,6 @@ static void DrawPantryList(Int16 itemNum, RectanglePtr bounds, Char** data) {
 
 /***********************************************************************
  *
- * FUNCTION:     PopulateIngredientList
- *
- * DESCRIPTION:  Populates ingredient list with LstSetArrayChoices
- *				 (may replace)
- *
- * PARAMETERS:   Form pointer
- *
- * RETURNED:     err
- *
- ***********************************************************************/
-static Err PopulateIngredientList(FormType *frmP) {
-	ListType *lst;
-	Boolean handled = false;
-	Boolean done = false;
-	UInt16 numRecords = DmNumRecords(gIngredientDB);
-	Char* storagePtr = NULL;
-    MemHandle recH;
-    Char* recP;
-	UInt16 i;
-
-	frmP = FrmGetActiveForm();
-	lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, optionsList));
-	
-    
-	if (numRecords == 0) {
-		LstSetListChoices(lst, NULL, 0);
-	} else {
-	    ctx.ingredientNames   = MemPtrNew(numRecords * sizeof(Char *));
-	    ctx.ingredientStorage = MemPtrNew(numRecords * 16);
-	    storagePtr            = ctx.ingredientStorage;
-
-	    if (!ctx.ingredientNames || !ctx.ingredientStorage) {
-	    	if (ctx.ingredientNames) MemPtrFree(ctx.ingredientNames);
-	        return memErrNotEnoughSpace;
-	    }
-	    
-	    for (i = 0; i < numRecords; i++) {
-	        recH = DmQueryRecord(gIngredientDB, i);
-	        if (!recH) continue;
-
-	        recP = MemHandleLock(recH);
-	        StrNCopy(storagePtr, recP, 15);
-	        MemHandleUnlock(recH);
-	                
-	        storagePtr[15] = '\0';
-	        ctx.ingredientNames[i] = storagePtr;
-	        storagePtr += StrLen(storagePtr) + 1; //max 16
-	    }
-	    
-	    MemPtrResize(ctx.ingredientStorage, (storagePtr - ctx.ingredientStorage));
-	    LstSetListChoices(lst, ctx.ingredientNames, numRecords);
-	    LstDrawList(lst);
-	    LstSetSelection(lst, -1);
-	}
-	
-	return errNone;
-
-}
-
-/***********************************************************************
- *
  * FUNCTION:     PantryDoCommand
  *
  * DESCRIPTION:  Handles pantry button and menu events
@@ -136,7 +72,7 @@ static Boolean PantryDoCommand(UInt16 command) {
 	switch(command) {
 		case PantryAdd:
 			frmP = FrmGetActiveForm();
-	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, optionsList));
+	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryOptionsList));
 	   		selection = LstGetSelection(lst); 
 			if (selection != noListSelection) {
 				AddIdToDatabase(gPantryDB, IDFromIndex(gIngredientDB, selection));
@@ -177,6 +113,10 @@ static Boolean PantryDoCommand(UInt16 command) {
 	return handled;
 }
 
+/*********************************************************************
+ * Public functions
+ *********************************************************************/
+
 /***********************************************************************
  *
  * FUNCTION:     PantryHandleEvent
@@ -191,7 +131,6 @@ static Boolean PantryDoCommand(UInt16 command) {
 Boolean PantryHandleEvent(EventPtr eventP) {
    FormPtr frmP;
    Boolean handled = false;
-   Err err;
    ListType* lst;
 
 	switch (eventP->eType) {
@@ -199,8 +138,11 @@ Boolean PantryHandleEvent(EventPtr eventP) {
 			frmP = FrmGetActiveForm();			
 			FrmDrawForm (frmP);
 
-			err = PopulateIngredientList(frmP);
-			if (err != errNone) displayError(err);
+			lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryOptionsList));
+			LstSetListChoices(lst, NULL, DmNumRecords(gIngredientDB));
+			LstSetDrawFunction(lst, DrawIngredientList);
+	    	LstDrawList(lst);
+	    	LstSetSelection(lst, -1);
 
 			lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryList));
 			LstSetListChoices(lst, NULL, DmNumRecords(gPantryDB));
@@ -216,17 +158,6 @@ Boolean PantryHandleEvent(EventPtr eventP) {
 
 		case menuEvent: 
 			return PantryDoCommand(eventP->data.menu.itemID);
-			
-		case frmCloseEvent:
-			if (ctx.ingredientNames) {
-				MemPtrFree(ctx.ingredientNames);
-				ctx.ingredientNames = NULL;
-			}
-			if (ctx.ingredientStorage) {
-				MemPtrFree(ctx.ingredientStorage);
-				ctx.ingredientStorage = NULL;
-			}
-			break;
 			
 		default:		
 			break;

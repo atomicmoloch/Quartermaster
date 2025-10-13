@@ -39,19 +39,124 @@
  * RETURNED:
  *     address of object as a void pointer
  */
-void * GetObjectPtr(UInt16 objectID)
+/* void * GetObjectPtr(UInt16 objectID)
 {
 	FormType * frmP;
 
 	frmP = FrmGetActiveForm();
 	return FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, objectID));
+} */
+
+/***********************************************************************
+ *
+ * FUNCTION:     DrawIngredientList
+ *
+ * DESCRIPTION:  ListDrawFunction for ingredient list
+ *				 (shared among pantry, grocery list, and edit recipe)
+ *
+ * PARAMETERS:   list index of item, drawing boundry
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+void DrawIngredientList(Int16 itemNum, RectanglePtr bounds, Char** data) {
+	MemHandle ingredientH;
+	Char* ingredientP;
+
+	if (itemNum >= DmNumRecords(gIngredientDB)) return;
+	
+    ingredientH = DmQueryRecord(gIngredientDB, itemNum);
+    if (!ingredientH) return;
+        
+    ingredientP = MemHandleLock(ingredientH);
+    
+    WinDrawTruncChars(
+		ingredientP,
+		StrLen(ingredientP),
+		bounds->topLeft.x,
+		bounds->topLeft.y,
+		bounds->extent.x
+	);
+		
+	MemHandleUnlock(ingredientH);
+} 
+
+/***********************************************************************
+ *
+ * FUNCTION:     FormatQuantity
+ *
+ * DESCRIPTION:  Builds string for recipe unit quantity, based on if a
+ *				 fractional component is specified
+ *				 NOTE: PalmOS doesn't have a StrNPrintF function
+ *				 However, since the max value for each parameter is 255,
+ *				 the max string length is 11
+ *
+ * PARAMETERS:   output buffer, whole unit component, fraction components
+ *
+ * RETURNED:     nothing (writes to buffer)
+ *
+ ***********************************************************************/
+void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom) {
+    if (count == 0 && frac == 0)
+        out[0] = '\0';
+    else if (frac == 0)
+        StrPrintF(out, "%u", count);
+    else if (count == 0)
+        StrPrintF(out, "%u/%u", frac, denom);
+    else
+        StrPrintF(out, "%u %u/%u", count, frac, denom);
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     MainMenuDoCommand
+ *
+ * DESCRIPTION:  Event handler for main menu shared across several forms
+ *
+ * PARAMETERS:   command
+ *
+ * RETURNED:     handled boolean
+ *
+ ***********************************************************************/
+Boolean MainMenuDoCommand(UInt16 command)
+{
+	FormType * frmP;
+	Boolean handled = false;
+
+	switch (command)
+	{
+		case OptionsAboutQuartermaster:
+			MenuEraseStatus(0);
+
+			frmP = FrmInitForm (AboutForm);
+			FrmDoDialog (frmP);                    
+			FrmDeleteForm (frmP);
+
+			handled = true;
+			break;
+			
+		case ViewRecipes:
+			FrmGotoForm(formRecipeList);
+			handled = true;
+			break;	
+			
+		case ViewPantry:
+			FrmGotoForm(formPantry);
+			handled = true;
+			break;
+			
+		case ViewGrocery:
+			FrmGotoForm(formGrocery);
+			handled = true;
+			break;		
+	}
+
+	return handled;
 }
 
 /*********************************************************************
  * Internal Functions
  *********************************************************************/
-
-
 
 /*
  * FUNCTION: AppHandleEvent
@@ -103,6 +208,10 @@ static Boolean AppHandleEvent(EventType * eventP)
 				
 			case formPantry:
 				FrmSetEventHandler(frmP, PantryHandleEvent);
+				break;
+				
+			case formGrocery:
+				FrmSetEventHandler(frmP, GroceryHandleEvent);
 				break;
 		}
 		return true;
