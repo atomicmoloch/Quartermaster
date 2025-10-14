@@ -50,7 +50,7 @@ static UInt16 DrawRecipe(FormType *form)
     recipeP = MemHandleLock(ctx.recipe);
     recipe  = RecipeGetRecord(recipeP); 
     
-    // Creates drawing window based on scrillbar
+    // Creates drawing window based on scrollbar
     FrmGetObjectBounds(form, FrmGetObjectIndex(form, ViewRecipeScrollbar), &r);
     r.extent.x  = r.topLeft.x;
     r.topLeft.x = 0;
@@ -116,6 +116,41 @@ static UInt16 DrawRecipe(FormType *form)
     return y;
 }
 
+static Boolean ViewRecipeDoCommand(UInt16 command) {
+	Boolean handled = false;
+	MemPtr recipeP;
+	RecipeRecord recipe;
+	UInt16 i;
+
+	switch(command) {
+		case AddAll:
+		    recipeP = MemHandleLock(ctx.recipe);
+		    recipe  = RecipeGetRecord(recipeP); 
+		    for (i = 0; i < recipe.numIngredients; i++) {
+		    	AddIdToDatabase(gGroceryDB, recipe.ingredientIDs[i]);
+		    }
+		    MemHandleUnlock(ctx.recipe);
+		    handled = true;
+			break;
+			
+		case AddMissing:
+		    recipeP = MemHandleLock(ctx.recipe);
+		    recipe  = RecipeGetRecord(recipeP); 
+		    for (i = 0; i < recipe.numIngredients; i++) {
+		    	if (!InDatabase(gPantryDB, recipe.ingredientIDs[i]))
+			    	AddIdToDatabase(gGroceryDB, recipe.ingredientIDs[i]);
+		    }
+			MemHandleUnlock(ctx.recipe);
+		    handled = true;
+			break;
+	}
+	
+	if (!handled)
+		handled = MainMenuDoCommand(command);
+	
+	return handled;
+}
+
 /*********************************************************************
  * External functions
  *********************************************************************/
@@ -163,8 +198,8 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
             DrawRecipe(frmP);
             return true;
             
-		case menuEvent: //Likely change later
-			return MainMenuDoCommand(eventP->data.menu.itemID);
+		case menuEvent:
+			return ViewRecipeDoCommand(eventP->data.menu.itemID);
 			
 		case keyDownEvent:
 			FrmGetFormBounds(frmP, &r);

@@ -80,7 +80,9 @@ static Boolean PantryDoCommand(UInt16 command) {
 				LstSetListChoices(lst, NULL, DmNumRecords(gPantryDB));
 				LstDrawList(lst);
 			}
+			handled = true;
 			break;
+			
 		case PantryDelete:
 			frmP = FrmGetActiveForm();
 	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, pantryList));
@@ -93,6 +95,7 @@ static Boolean PantryDoCommand(UInt16 command) {
 			}
 			handled = true;
 			break;
+			
 		case StrictSearch:
 			numResults = PantryStrictSearch(&results);
 			if (numResults > 0)
@@ -101,6 +104,7 @@ static Boolean PantryDoCommand(UInt16 command) {
 				displayCustomError(30);
 			handled = true;
 			break;
+			
 		case FuzzySearch:
 			numResults = PantryFuzzySearch(&results);
 			if (numResults > 0)

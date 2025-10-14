@@ -330,6 +330,41 @@ UInt16 IndexFromID(DmOpenRef dbase, UInt32 id)
 
 /***********************************************************************
  *
+ * FUNCTION:     InDatabase
+ *
+ * DESCRIPTION:  Checks if an entry already exists in a chosen database
+ *
+ * PARAMETERS:   database, id
+ *
+ * RETURNED:     boolean
+ *
+ ***********************************************************************/
+Boolean InDatabase(DmOpenRef dbase, UInt32 id) {
+    UInt16 index;
+    MemHandle recH;
+    UInt32 *recP;
+
+    if (!dbase)
+        return false;
+
+    index = DmFindSortPosition(dbase, &id, 0, (DmComparF *) DBIngredientIDCompare, 0);
+
+	if (index > 0) {
+		recH = DmQueryRecord(dbase, index - 1);
+		recP = MemHandleLock(recH);
+		
+		if (*recP == id) {
+			MemHandleUnlock(recH);
+			return true; 
+		}
+		MemHandleUnlock(recH);
+		recP = NULL, recH = NULL;
+	}
+	return false;
+}
+
+/***********************************************************************
+ *
  * FUNCTION:     AddIdToDatabase
  *
  * DESCRIPTION:  Checks if an identical entry already exists.

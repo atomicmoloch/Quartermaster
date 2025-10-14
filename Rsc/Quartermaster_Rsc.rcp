@@ -74,7 +74,7 @@ END
 
 
 FORM ID formViewRecipe  AT ( 0 0 160 160 )
-NOFRAME MENUID MainMenuBar
+NOFRAME MENUID menuViewRecipe
 BEGIN
         TITLE "View Recipe"
 	 
@@ -197,3 +197,32 @@ BEGIN
 	BUTTON "Add >" ID GroceryAdd  AT (64 20 AUTO AUTO)
 	BUTTON "< Del" ID GroceryDelete  AT (65 41 AUTO AUTO)
 END
+
+
+ALERT ID InPantryAlert 
+INFORMATION
+BEGIN
+     TITLE "Ingredient In Pantry"
+     MESSAGE "Ingredient is in your pantry. Continue?"
+     BUTTONS "Yes" "Cancel"
+END
+
+
+MENU ID menuViewRecipe
+BEGIN
+	PULLDOWN "View"
+	BEGIN
+		MENUITEM "Recipes" ID ViewRecipes   "R"
+		MENUITEM "Pantry" ID ViewPantry   "P"
+		MENUITEM "Grocery List" ID ViewGrocery  "G"
+	END
+	PULLDOWN "Add"
+	BEGIN
+		MENUITEM "All to Grocery List" ID AddAll
+		MENUITEM "Missing to Grocery List" ID AddMissing
+	END
+PULLDOWN "Help"
+	BEGIN
+		MENUITEM "About Quartermaster" ID OptionsAboutQuartermaster
+	END
+END	

@@ -89,6 +89,7 @@ Char* RecipeGetStepsPtr(MemPtr recP);
 Boolean IDInDatabase(DmOpenRef dbase, UInt32 id);
 UInt16 PantryFuzzySearch(MemHandle* ret);
 UInt16 PantryStrictSearch(MemHandle* ret);
+Boolean InDatabase(DmOpenRef dbase, UInt32 id);
 
 /*********************************************************************
  * RecipeList.c functions

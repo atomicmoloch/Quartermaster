@@ -55,6 +55,7 @@ static Boolean GroceryDoCommand(UInt16 command) {
 	Boolean handled = false;
 	ListType* lst;
 	UInt16 selection;
+	UInt32 id;
 
 	switch(command) {
 		case GroceryAdd:
@@ -63,12 +64,19 @@ static Boolean GroceryDoCommand(UInt16 command) {
 	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, groceryOptionsList));
 	   		selection = LstGetSelection(lst); 
 			if (selection != noListSelection) {
-				AddIdToDatabase(gGroceryDB, IDFromIndex(gIngredientDB, selection));
+				id = IDFromIndex(gIngredientDB, selection);
+				if (InDatabase(gPantryDB, id)) {
+					if (FrmAlert(InPantryAlert) != 0) // alert if ingredient is in pantry
+						return true; // exits early if cancel button chosen
+				}
+				AddIdToDatabase(gGroceryDB, id);
 				lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, groceryList));
 				LstSetListChoices(lst, NULL, DmNumRecords(gGroceryDB));
 				LstDrawList(lst);
 			}
+			handled = true;
 			break;
+
 		case GroceryDelete:
 			frmP = FrmGetActiveForm();
 	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, groceryList));
