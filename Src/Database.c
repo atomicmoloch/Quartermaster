@@ -132,7 +132,7 @@ static Int16 DBIngredientIDCompare(void *rec1, void *rec2, Int16 other,
  *				 rec2 alphabetically, negative number if the reverse
  *
  ***********************************************************************/
-static Int16 DBIntCompare(void *rec1, void *rec2, Int16 other,
+/* static Int16 DBIntCompare(void *rec1, void *rec2, Int16 other,
                         SortRecordInfoPtr rec1SortInfo,
                         SortRecordInfoPtr rec2SortInfo,
                         MemHandle appInfoH)
@@ -143,7 +143,7 @@ static Int16 DBIntCompare(void *rec1, void *rec2, Int16 other,
         return 1;
     else
         return 0;
-}
+} */
 
 /***********************************************************************
  *
