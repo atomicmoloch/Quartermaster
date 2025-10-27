@@ -65,7 +65,7 @@ static Boolean GroceryDoCommand(UInt16 command) {
 	   		selection = LstGetSelection(lst); 
 			if (selection != noListSelection) {
 				id = IDFromIndex(gIngredientDB, selection);
-				if (InDatabase(gPantryDB, id)) {
+				if (EntryInDatabase(gPantryDB, id)) {
 					if (FrmAlert(InPantryAlert) != 0) // alert if ingredient is in pantry
 						return true; // exits early if cancel button chosen
 				}

@@ -154,13 +154,15 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 	Boolean handled = false;
 	FormPtr frmP;
     ListType *lst;
+    FieldPtr fldP;
+    UInt16 focus;
     UInt8 selection;
     Err err;
 	
 	switch (command) {
 	   	case EditRecipeAddIng:
 	   		if (ctx.numIngredients == recipeMaxIngredients) {
-	   			displayCustomError(11);
+	   			displayError(errRecipeMaxIngreds);
 	   		} else {
 	   			/*frmP = FrmInitForm(formAddIngredient);
 	   			selection = FrmDoDialog(frmP);
@@ -169,6 +171,7 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 	   		}
 	   		handled = true;
 	   		break;
+	   		
 	   	case EditRecipeRemoveIng:
 			frmP = FrmGetActiveForm();
 	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeIngredients));
@@ -183,22 +186,57 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 			LstSetSelection(lst, -1);
 	   		handled = true;
 	   		break;
+	   		
 	    case EditRecipeSave:
-	   	case EditRecipeMenuSave:
 	   		err = saveRecipe();
 	   		if (err == dmErrInvalidParam)
-	   			displayCustomError(10);
+	   			displayError(errRecipeNameBlank);
 	   		else if (err != errNone)
 	   			displayError(err);
 	   		else
 		   		FrmGotoForm(formRecipeList);
 	   		handled = true;
 	   		break;
+	   		
 	    case EditRecipeCancel:
-	   	case EditRecipeMenuCancel:
 	   		FrmGotoForm(formRecipeList);
 	   		handled = true;
 	   		break;	
+	   		
+  	 	case EditCut:
+  	 	case EditCopy:
+	   	case EditPaste:
+	   	case EditUndo:
+	   	case EditSelectAll:
+	   		frmP = FrmGetActiveForm();
+	   		focus = FrmGetFocus(frmP);
+			if (FrmGetObjectType(frmP, focus) == frmFieldObj) {
+			    fldP = FrmGetObjectPtr(frmP, focus);
+			   switch (command) {
+			   	case EditCut:
+			   		FldCut(fldP);
+			   		break;
+			   		
+			   	case EditCopy:
+			   		FldCopy(fldP);
+			   		break;
+			   		
+			   	case EditPaste:
+			   		FldPaste(fldP);
+			   		break;
+			   	
+			   	case EditUndo:
+			   		FldUndo(fldP);
+			   		break;
+			   		
+			   	case EditSelectAll:
+			  			FldSetSelection(fldP, 0, FldGetTextLength(fldP));
+			  			break;
+			  	}
+			}
+	  		handled = true;
+	  		break;
+	  		
 		default:
 			break;
  	} 
@@ -376,7 +414,7 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 				    event.data.frmUpdate.formID = formEditRecipe;
 				    EvtAddEventToQueue(&event); //Note: EvtAddEventToQueue makes copy of passed event
 				} else {
-					displayCustomError(12);
+					displayError(errIngredNameBlank);
 				}
 				handled = true;
 				break; 

@@ -1,0 +1,6 @@
+Debug/
+Release/
+Quartermaster_Data/
+boston.yaml
+build_database.py
+*.pdb

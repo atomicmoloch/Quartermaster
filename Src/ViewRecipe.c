@@ -137,7 +137,7 @@ static Boolean ViewRecipeDoCommand(UInt16 command) {
 		    recipeP = MemHandleLock(ctx.recipe);
 		    recipe  = RecipeGetRecord(recipeP); 
 		    for (i = 0; i < recipe.numIngredients; i++) {
-		    	if (!InDatabase(gPantryDB, recipe.ingredientIDs[i]))
+		    	if (!EntryInDatabase(gPantryDB, recipe.ingredientIDs[i]))
 			    	AddIdToDatabase(gGroceryDB, recipe.ingredientIDs[i]);
 		    }
 			MemHandleUnlock(ctx.recipe);

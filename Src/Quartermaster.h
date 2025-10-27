@@ -18,15 +18,23 @@
 #define appName					"Quartermaster"
 #define appVersionNum			0x01
 #define appPrefID				0x00
-#define appPrefVersionNum		0x01
+#define appPrefVersionNum	    0x01
 
-#define databaseCreatorID      'WOEM'
-#define databaseRecipeName     "QMRecipes"
-#define databaseIngredientName "QMIngredients"
-#define databaseUnitName 	   "QMUnits"
-#define databasePantryName 	   "QMPantry"
-#define databaseGroceryName	   "QMGrocList"
+#define databaseCreatorID       'WOEM'
+#define databaseRecipeName      "QMRecipes"
+#define databaseIngredientName  "QMIngredients"
+#define databaseUnitName 	    "QMUnits"
+#define databasePantryName 	    "QMPantry"
+#define databaseGroceryName	    "QMGrocList"
 #define recipeMaxIngredients    32
+
+// Custom errors
+#define errRecipeNameBlank		(appErrorClass | 11)
+#define errRecipeMaxIngreds		(appErrorClass | 12)
+#define errIngredNameBlank		(appErrorClass | 21)
+#define errIngredInUse          (appErrorClass | 22)
+#define errSearchNoMatch		(appErrorClass | 31)
+			
 
 
 /*********************************************************************
@@ -71,25 +79,28 @@ Boolean MainMenuDoCommand(UInt16 command);
  
 Err DatabaseOpen();
 void DatabaseClose();
-
-Err AddRecipe(const Char *recipeName, const Char *ingredientNames[],
-    const Char *unitNames[], UInt16 numIngredients, const UInt8 counts[],
-    const UInt8 fracs[], const UInt8 denoms[], const Char *recipeSteps);
-UInt32 IngredientIDByName(const Char *ingredientName);
-UInt32 UnitIDByName(const Char *ingredientName);
-Err IngredientNameByID(Char* buffer, UInt8 len, UInt32 entryID);
-Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID);
-MemHandle QueryRecipes(UInt32 ingId);
-Err RemoveRecipe(UInt16 recipeIndex);
+Boolean EntryInDatabase(DmOpenRef dbase, UInt32 id);
+UInt16 IndexOfEntry(DmOpenRef dbase, UInt32 id);
 Err AddIdToDatabase(DmOpenRef dbase, UInt32 id);
 UInt16 IndexFromID(DmOpenRef dbase, UInt32 id);
 UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index);
 RecipeRecord RecipeGetRecord(MemPtr recP);
-Char* RecipeGetStepsPtr(MemPtr recP);
-Boolean IDInDatabase(DmOpenRef dbase, UInt32 id);
+
+Err AddRecipe(const Char *recipeName, const Char *ingredientNames[],
+    const Char *unitNames[], UInt16 numIngredients, const UInt8 counts[],
+    const UInt8 fracs[], const UInt8 denoms[], const Char *recipeSteps);
+Err RemoveRecipe(UInt16 recipeIndex);
+Char* RecipeGetStepsPtr(MemPtr recP); 
+    
+UInt32 IngredientIDByName(const Char *ingredientName);
+Err IngredientNameByID(Char* buffer, UInt8 len, UInt32 entryID);
+Err RemoveIngredient(UInt32 ingId);
+
+UInt32 UnitIDByName(const Char *ingredientName);
+Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID);
+
 UInt16 PantryFuzzySearch(MemHandle* ret);
 UInt16 PantryStrictSearch(MemHandle* ret);
-Boolean InDatabase(DmOpenRef dbase, UInt32 id);
 
 /*********************************************************************
  * RecipeList.c functions
@@ -130,7 +141,6 @@ Boolean GroceryHandleEvent(EventPtr eventP);
 void displayError(Err code);
 void displayErrorIf(Err code);
 void displayFatalError(Err code);
-void displayCustomError(UInt8 code);
 Boolean confirmChoice(UInt8 dialogC);
 
 #endif /* QUARTERMASTER_H_ */

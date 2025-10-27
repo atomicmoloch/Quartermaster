@@ -8,3 +8,12 @@ Inspired by Sudo-nano's [application by the same name.](https://github.com/sudo-
 Currently in early development!
 
 Made using the Codewarriors IDE
+
+
+## Issues
+
+ - Maybe add add ingredient panel for adding ingredients without creating a recipe?
+ 	- also manual removal of manually-added recipes
+ 	- Recipe section of yaml file format
+ - Add scrollbar to edit interface?
+ - General interface polish

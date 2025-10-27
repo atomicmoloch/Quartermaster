@@ -330,41 +330,6 @@ UInt16 IndexFromID(DmOpenRef dbase, UInt32 id)
 
 /***********************************************************************
  *
- * FUNCTION:     InDatabase
- *
- * DESCRIPTION:  Checks if an entry already exists in a chosen database
- *
- * PARAMETERS:   database, id
- *
- * RETURNED:     boolean
- *
- ***********************************************************************/
-Boolean InDatabase(DmOpenRef dbase, UInt32 id) {
-    UInt16 index;
-    MemHandle recH;
-    UInt32 *recP;
-
-    if (!dbase)
-        return false;
-
-    index = DmFindSortPosition(dbase, &id, 0, (DmComparF *) DBIngredientIDCompare, 0);
-
-	if (index > 0) {
-		recH = DmQueryRecord(dbase, index - 1);
-		recP = MemHandleLock(recH);
-		
-		if (*recP == id) {
-			MemHandleUnlock(recH);
-			return true; 
-		}
-		MemHandleUnlock(recH);
-		recP = NULL, recH = NULL;
-	}
-	return false;
-}
-
-/***********************************************************************
- *
  * FUNCTION:     AddIdToDatabase
  *
  * DESCRIPTION:  Checks if an identical entry already exists.
@@ -414,16 +379,16 @@ Err AddIdToDatabase(DmOpenRef dbase, UInt32 id)
 
 /***********************************************************************
  *
- * FUNCTION:     IDInDatabase
+ * FUNCTION:     EntryInDatabase
  *
  * DESCRIPTION:  Checks if an entry already exists.
  *
- * PARAMETERS:   database, id
+ * PARAMETERS:   database, entry (id)
  *
  * RETURNED:     boolean
  *
  ***********************************************************************/
-Boolean IDInDatabase(DmOpenRef dbase, UInt32 id)
+Boolean EntryInDatabase(DmOpenRef dbase, UInt32 id)
 {
     UInt16 index;
     MemHandle recH;
@@ -443,10 +408,45 @@ Boolean IDInDatabase(DmOpenRef dbase, UInt32 id)
 			return true; 
 		}
 		MemHandleUnlock(recH);
-		recP = NULL, recH = NULL;
 	}
 
 	return false;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     IndexOfEntry
+ *
+ * DESCRIPTION:  IDInDatabase but it returns the index instead of a boolean
+ *
+ * PARAMETERS:   database, entry (id)
+ *
+ * RETURNED:     UInt16 index or 0xFFFF if not exists
+ *
+ ***********************************************************************/
+UInt16 IndexOfEntry(DmOpenRef dbase, UInt32 id)
+{
+    UInt16 index;
+    MemHandle recH;
+    UInt32 *recP;
+
+    if (!dbase)
+        return false;
+
+    index = DmFindSortPosition(dbase, &id, 0, (DmComparF *) DBIngredientIDCompare, 0);
+
+	if (index > 0) {
+		recH = DmQueryRecord(dbase, index - 1);
+		recP = MemHandleLock(recH);
+		
+		if (*recP == id) {
+			MemHandleUnlock(recH);
+			return index - 1; 
+		}
+		MemHandleUnlock(recH);
+	}
+
+	return 0xFFFF;
 }
 
 
@@ -570,13 +570,7 @@ Err RemoveRecipe(UInt16 recipeIndex) {
 	MemHandleUnlock(recH);
 		
 	for (i = 0; i < recipeMaxIngredients && recipe.ingredientIDs[i] != 0; i++) {
-		if (!(FindIfUsed(0, recipe.ingredientIDs[i]))) {
-			err = DmFindRecordByID(gIngredientDB, recipe.ingredientIDs[i], &index);
-			if (err == errNone) DmRemoveRecord(gIngredientDB, index);
-			// If speed is a concern, switch this to using DmDeleteRecord and
-			// manually pack later. But I anticipate deleting records on-device
-			// to be rare
-		} 
+		RemoveIngredient(recipe.ingredientIDs[i]);
 	}
 		
 	for (i = 0; i < recipeMaxIngredients && recipe.ingredientUnits[i] != 0; i++) {
@@ -660,6 +654,52 @@ Char* RecipeGetStepsPtr(MemPtr recP)
 /*********************************************************************
  * Ingredient DB Functions
  *********************************************************************/
+
+/***********************************************************************
+ *
+ * FUNCTION:     RemoveIngredient
+ *
+ * DESCRIPTION:  Removes ingredient specified by id from ingredient DB,
+ *				 pantry DB, and grocery list DB
+ * 
+ * PARAMETERS:   Ingredient ID
+ *
+ * RETURNED:     errNone if successful, err if ID can't be found or if
+ *				 ingredient used 
+ *
+ ***********************************************************************/
+Err RemoveIngredient(UInt32 ingId) {
+	UInt16 index;
+	Err err;
+
+	if (!(FindIfUsed(0, ingId))) {
+	
+		index = IndexOfEntry(gPantryDB, ingId);
+		if (index != 0xFFFF)
+			err = DmRemoveRecord(gPantryDB, index);
+			
+		index = IndexOfEntry(gGroceryDB, ingId);
+		if (index != 0xFFFF)
+			err = DmRemoveRecord(gGroceryDB, index);
+	
+		// Note: ingredient must be deleted from pantry/grocery dbs first
+		// because of how DbIngredientIDCompare works
+	
+		err = DmFindRecordByID(gIngredientDB, ingId, &index);
+		if (err == errNone) 
+			DmRemoveRecord(gIngredientDB, index);
+		else
+			return err;
+			
+		// If speed is a concern, switch this to using DmDeleteRecord and
+		// manually pack later. But I anticipate deleting records on-device
+		// to be rare
+
+		return errNone;
+	} else {
+		return errIngredInUse;
+	}
+}
 
 /***********************************************************************
  *
@@ -880,7 +920,7 @@ UInt16 PantryFuzzySearch(MemHandle* ret) {
 		MemHandleUnlock(recH); 
 		
 		for (j = 0; j < recipe.numIngredients; j++) {
-			if (IDInDatabase(gPantryDB, recipe.ingredientIDs[j])) { // checks in this manner because pantryDB has ingredients in sorted order
+			if (EntryInDatabase(gPantryDB, recipe.ingredientIDs[j])) { // checks in this manner because pantryDB has ingredients in sorted order
 				results[idx] = i;
 				idx++;
 				break; // only affects innermost loop
@@ -935,7 +975,7 @@ UInt16 PantryStrictSearch(MemHandle* ret) {
 		CanBeMade = true;
 		
 		for (j = 0; j < recipe.numIngredients; j++) {
-			if (!IDInDatabase(gPantryDB, recipe.ingredientIDs[j]))
+			if (!EntryInDatabase(gPantryDB, recipe.ingredientIDs[j]))
 				CanBeMade = false;
 		}
 		

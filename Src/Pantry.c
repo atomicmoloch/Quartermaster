@@ -101,7 +101,7 @@ static Boolean PantryDoCommand(UInt16 command) {
 			if (numResults > 0)
 				OpenRecipeList(results, numResults);
 			else
-				displayCustomError(30);
+				displayError(errSearchNoMatch);
 			handled = true;
 			break;
 			
@@ -110,7 +110,7 @@ static Boolean PantryDoCommand(UInt16 command) {
 			if (numResults > 0)
 				OpenRecipeList(results, numResults);
 			else
-				displayCustomError(30);
+				displayError(errSearchNoMatch);
 			handled = true;
 			break;
 	}

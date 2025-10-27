@@ -7,7 +7,8 @@
  *
  * FUNCTION:     displayError
  *
- * DESCRIPTION:  Displays non-fatal error message
+ * DESCRIPTION:  Displays non-fatal error message, from either standard
+ *			     or custom application error codes
  *
  * PARAMETERS:   Error code
  *
@@ -16,7 +17,37 @@
  ***********************************************************************/
 void displayError(Err code) {
 	Char buf[64];
-	SysErrString(code, buf, 64);
+	
+	if (code <= appErrorClass) {
+		SysErrString(code, buf, 64);
+	} else {
+		switch(code) {
+			case errRecipeNameBlank:
+				StrCopy(buf, "Recipe name cannot be blank");
+				break;
+				
+			case errRecipeMaxIngreds:
+				StrCopy(buf, "Max number of ingredients reached");
+				break;
+				
+			case errIngredNameBlank:
+				StrCopy(buf, "silly billy, your ingredient must have a name");
+				break;
+				
+			case errIngredInUse:
+				StrCopy(buf, "Ingredient in use in one or more recipes");
+				break;
+				
+			case errSearchNoMatch:
+				StrCopy(buf, "No recipes match search criteria");
+				break;
+				
+			default:
+				StrCopy(buf, "[no dialogue specified]");
+				break;
+	
+		}
+	}
 	FrmCustomAlert(ErrorAlert, buf, NULL, NULL);
 }
 
@@ -52,46 +83,6 @@ void displayFatalError(Err code) {
 	FrmCustomAlert(ErrorAlert, buf, "Fatal ", NULL);
 	AppStop();
 	AppLaunchWithCommand(sysFileCDefaultApp, sysAppLaunchCmdNormalLaunch, NULL);
-}
-
-/***********************************************************************
- *
- * FUNCTION:     displayCustomError
- *
- * DESCRIPTION:  Displays non-fatal error message with custom message
- *
- * PARAMETERS:   Error code
- *
- * RETURNED:     nothing
- *
- ***********************************************************************/
-void displayCustomError(UInt8 code) {
-	Char buf[64];
-	
-	switch(code) {
-		case 10:
-			StrCopy(buf, "recipe name cannot be blank");
-			break;
-			
-		case 11:
-			StrCopy(buf, "max number of ingredients reached");
-			break;
-			
-		case 12:
-			StrCopy(buf, "silly billy, your ingredient must have a name");
-			break;
-			
-		case 30:
-			StrCopy(buf, "no recipes match search criteria");
-			break;
-			
-		default:
-			StrCopy(buf, "[no dialogue specified]");
-			break;
-	
-	}
-
-	FrmCustomAlert(ErrorAlert, buf, NULL, NULL);
 }
 
 /***********************************************************************

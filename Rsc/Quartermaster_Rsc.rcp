@@ -17,21 +17,6 @@ PULLDOWN "Help"
 	END
 END	
 
-MENU ID EditOnlyMenuBar
-BEGIN
-    PULLDOWN "Edit"
-    BEGIN
-		MENUITEM "Undo" ID 10000 "U"
-		MENUITEM "Cut" ID 10001 "X"
-		MENUITEM "Copy"ID 10002 "C"
-		MENUITEM "Paste" ID 10003 "P"
-		MENUITEM "Select All" ID 10004 "S"
-		MENUITEM SEPARATOR ID 10005
-		MENUITEM "Keyboard" ID 10006 "K"
-		MENUITEM "Graffiti Help" ID 10007 "G"
-    END
-END
-
 ALERT ID RomIncompatibleAlert
     DEFAULTBUTTON 0
     ERROR
@@ -156,11 +141,16 @@ BEGIN
      PULLDOWN "Recipe"
      BEGIN
           MENUITEM "Add Ingredient" ID EditRecipeAddIng  
-     	MENUITEM "Remove Ingredient" ID EditRecipeRemoveIng  
-	MENUITEM "Save" ID EditRecipeMenuSave
-	MENUITEM "Cancel" ID EditRecipeMenuCancel
-END
-     
+     	  MENUITEM "Remove Ingredient" ID EditRecipeRemoveIng  
+	END
+    PULLDOWN "Edit"
+    BEGIN
+        MENUITEM "Cut" ID EditCut "X"
+        MENUITEM "Copy" ID EditCopy "C"
+        MENUITEM "Paste" ID EditPaste "P"
+        MENUITEM "Undo" ID EditUndo "U"
+        MENUITEM "Select All" ID EditSelectAll "S"
+    END
 END
 
 FORM ID formPantry  AT ( 0 0 160 160 )

@@ -1,0 +1,62 @@
+recipes:
+- name: Scrambled Eggs
+  ingredients:
+  - name: Butter
+    unit: tbsp
+    whole: 2
+    frac: 0
+    denom: 0
+  - name: Eggs
+    unit: ''
+    whole: 4
+    frac: 0
+    denom: 0
+  steps: "Heat omelet pan, put in butter and when melted turn in unbeaten eggs.\n\
+    \ Cook until white is partially set, then stir until cooking is completed, when\
+    \ whites will be thoroughly set. Season with salt and pepper.\n"
+- name: Sugar Cookies
+  ingredients:
+  - name: Butter
+    unit: cup
+    whole: 0
+    frac: 1
+    denom: 2
+  - name: Sugar
+    unit: cup
+    whole: 1
+    frac: 0
+    denom: 0
+  - name: Eggs
+    unit: ''
+    whole: 2
+    frac: 0
+    denom: 0
+  - name: Salt
+    unit: tsp
+    whole: 0
+    frac: 1
+    denom: 2
+  - name: Baking Powder
+    unit: tsp
+    whole: 2
+    frac: 0
+    denom: 0
+  - name: Vanilla Extract
+    unit: tsp
+    whole: 1
+    frac: 0
+    denom: 0
+  - name: Milk
+    unit: tbsp
+    whole: 1
+    frac: 0
+    denom: 0
+  - name: Flour
+    unit: cups
+    whole: 1
+    frac: 1
+    denom: 2
+  steps: "Cream butter, add sugar, eggs, milk, and 1 cup flour mixed and sifted with\
+    \ baking powder and salt. Add enough more flour to make of right consistency.\
+    \ Chill, roll, sprinkle with sugar, and bake.\n For variety, flavor with nutmeg\
+    \ or cinnamon, or add chopped candied ginger or chopped nut meats to mixture.\n"
