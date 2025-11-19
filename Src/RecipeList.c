@@ -1,4 +1,5 @@
 #include <PalmOS.h>
+#include <PalmOSGlue.h>
 #include "Quartermaster.h"
 #include "Quartermaster_Rsc.h"
 
@@ -17,17 +18,30 @@ static RecipeListContext ctx = {0};
  * Internal functions
  *********************************************************************/
  
-
+ /***********************************************************************
+ *
+ * FUNCTION:     TranslateIndex
+ *
+ * DESCRIPTION:  If RecipeListContext (search results) are active,
+ *				 translates list index to recipe database index
+ *
+ * PARAMETERS:   list index
+ *
+ * RETURNED:     index of corresponding recipe in database
+ *
+ ***********************************************************************/
 static Int16 TranslateIndex(Int16 index) {
 	UInt16* resultP;
+	Int16 result;
 
 	if (ctx.results == NULL) {
 		return index;
 	} else {
 		if (index >= ctx.numResults) return noListSelection;
 		resultP = MemHandleLock(ctx.results);
-		return resultP[index];
+		result = resultP[index];
 		MemHandleUnlock(ctx.results);
+		return result;
 	}	
 } 
  
@@ -55,7 +69,7 @@ static void DrawRecipeList(Int16 itemNum, RectanglePtr bounds, Char** data) {
         
         nameP = MemHandleLock(nameH);
         
-		WinDrawTruncChars(
+		WinGlueDrawTruncChars(
 			nameP,
 			StrLen(nameP),
 			bounds->topLeft.x,
@@ -76,7 +90,7 @@ static void DrawRecipeList(Int16 itemNum, RectanglePtr bounds, Char** data) {
         
         nameP = MemHandleLock(nameH);
         
-		WinDrawTruncChars(
+		WinGlueDrawTruncChars(
 			nameP,
 			StrLen(nameP),
 			bounds->topLeft.x,
@@ -147,6 +161,14 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 				if (confirmChoice(0)) {
 					err = RemoveRecipe(selection);
 					if (err != errNone) displayError(err); //Non-fatal error if delete fails
+					if (ctx.results) {
+						MemHandleFree(ctx.results);
+			    		ctx.results = NULL;
+			    		ctx.numResults = 0;
+			    		// Clears search results if recipe is deleted
+			    		// This is because the recipe indices in results
+			    		// are no longer guaranteed to be valid
+					}
 					err = PopulateRecipeList(list);
 					if (err != errNone) displayError(err);
 				}

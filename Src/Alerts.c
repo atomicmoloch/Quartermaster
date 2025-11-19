@@ -38,6 +38,10 @@ void displayError(Err code) {
 				StrCopy(buf, "Ingredient in use in one or more recipes");
 				break;
 				
+			case errAddingIngred:
+				StrCopy(buf, "Ingredient could not be added");
+				break;
+				
 			case errSearchNoMatch:
 				StrCopy(buf, "No recipes match search criteria");
 				break;
@@ -48,6 +52,7 @@ void displayError(Err code) {
 	
 		}
 	}
+	//FrmCustomAlert(ErrorAlert, "Test", NULL, NULL);
 	FrmCustomAlert(ErrorAlert, buf, NULL, NULL);
 }
 
@@ -80,7 +85,7 @@ void displayErrorIf(Err code) {
 void displayFatalError(Err code) {
 	Char buf[64];
 	SysErrString(code, buf, 64);
-	FrmCustomAlert(ErrorAlert, buf, "Fatal ", NULL);
+	FrmCustomAlert(FatalErrorAlert, buf, "Fatal ", NULL);
 	AppStop();
 	AppLaunchWithCommand(sysFileCDefaultApp, sysAppLaunchCmdNormalLaunch, NULL);
 }

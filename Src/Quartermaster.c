@@ -1,3 +1,5 @@
+#include <PalmOSGlue.h>
+
 /*
  * Quartermaster.c
  *
@@ -24,29 +26,6 @@
  * External Functions
  *********************************************************************/
 
-/*
- * FUNCTION: GetObjectPtr
- *
- * DESCRIPTION:
- *
- * This routine returns a pointer to an object in the current form.
- *
- * PARAMETERS:
- *
- * formId
- *     id of the form to display
- *
- * RETURNED:
- *     address of object as a void pointer
- */
-/* void * GetObjectPtr(UInt16 objectID)
-{
-	FormType * frmP;
-
-	frmP = FrmGetActiveForm();
-	return FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, objectID));
-} */
-
 /***********************************************************************
  *
  * FUNCTION:     DrawIngredientList
@@ -70,7 +49,7 @@ void DrawIngredientList(Int16 itemNum, RectanglePtr bounds, Char** data) {
         
     ingredientP = MemHandleLock(ingredientH);
     
-    WinDrawTruncChars(
+    WinGlueDrawTruncChars(
 		ingredientP,
 		StrLen(ingredientP),
 		bounds->topLeft.x,
@@ -149,6 +128,11 @@ Boolean MainMenuDoCommand(UInt16 command)
 			FrmGotoForm(formGrocery);
 			handled = true;
 			break;		
+			
+		case ViewIngredients:
+			FrmGotoForm(formManageIngredients);
+			handled = true;
+			break;
 	}
 
 	return handled;
@@ -212,6 +196,10 @@ static Boolean AppHandleEvent(EventType * eventP)
 				
 			case formGrocery:
 				FrmSetEventHandler(frmP, GroceryHandleEvent);
+				break;
+				
+			case formManageIngredients:
+				FrmSetEventHandler(frmP, ManageIngredientsHandleEvent);
 				break;
 		}
 		return true;

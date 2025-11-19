@@ -33,6 +33,7 @@
 #define errRecipeMaxIngreds		(appErrorClass | 12)
 #define errIngredNameBlank		(appErrorClass | 21)
 #define errIngredInUse          (appErrorClass | 22)
+#define errAddingIngred         (appErrorClass | 23)
 #define errSearchNoMatch		(appErrorClass | 31)
 			
 
@@ -133,6 +134,12 @@ Boolean PantryHandleEvent(EventPtr eventP);
  * GroceryList.c functions
  *********************************************************************/
 Boolean GroceryHandleEvent(EventPtr eventP);
+
+/*********************************************************************
+ * ManageIngredients.c functions
+ *********************************************************************/
+Boolean ManualAddIngredientHandleEvent(EventPtr eventP);
+Boolean ManageIngredientsHandleEvent(EventPtr eventP);
 
 /*********************************************************************
  * Alerts.c functions

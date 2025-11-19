@@ -1,4 +1,5 @@
 #include <PalmOS.h>
+#include <PalmOSGlue.h>
 #include "Quartermaster.h"
 #include "Quartermaster_Rsc.h"
 
@@ -37,7 +38,7 @@ static void DrawGroceryList(Int16 itemNum, RectanglePtr bounds, Char** data) {
 		if (ingredientH) {
 			ingredientP = MemHandleLock(ingredientH);
 			
-			WinDrawTruncChars(
+			WinGlueDrawTruncChars(
 				ingredientP,
 				StrLen(ingredientP),
 				bounds->topLeft.x,
@@ -50,6 +51,17 @@ static void DrawGroceryList(Int16 itemNum, RectanglePtr bounds, Char** data) {
 	MemHandleUnlock(groceryH);
 }
 
+/***********************************************************************
+ *
+ * FUNCTION:     GroceryDoCommand
+ *
+ * DESCRIPTION:  Handles button presses on grocery list
+ *
+ * PARAMETERS:   command
+ *
+ * RETURNED:     handled boolean
+ *
+ ***********************************************************************/
 static Boolean GroceryDoCommand(UInt16 command) {
 	FormPtr frmP;
 	Boolean handled = false;

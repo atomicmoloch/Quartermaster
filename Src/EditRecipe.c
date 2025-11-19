@@ -1,4 +1,5 @@
 #include <PalmOS.h>
+#include <PalmOSGlue.h>
 #include "Quartermaster.h"
 #include "Quartermaster_Rsc.h"
 
@@ -240,6 +241,8 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 		default:
 			break;
  	} 
+	if (!handled)
+		handled = MainMenuDoCommand(command);
  	
  	return handled;
 }
@@ -276,7 +279,7 @@ static void DrawIngredientEntryList(Int16 itemNum, RectanglePtr bounds, Char** d
                    
     buf[49] = '\0';
  
-	WinDrawTruncChars(
+	WinGlueDrawTruncChars(
 		buf,
 		StrLen(buf),
 		bounds->topLeft.x,
@@ -460,6 +463,13 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
     FieldType *fld;
     ListType *lst;
     Char *steps;
+    
+    // Scrollbar variables
+    UInt16 scrollPos;
+    UInt16 textHeight;
+    UInt16 fieldHeight;
+    UInt16 maxValue;
+    Int16 scrollAmt;
 
 	switch (eventP->eType) {
 		case frmOpenEvent:
@@ -484,6 +494,21 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 		    LstSetDrawFunction(lst, DrawIngredientEntryList);
 		    LstDrawList(lst);
 		    LstSetSelection(lst, -1);
+		    
+		    
+			fld = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
+		
+			FldGetScrollValues(fld, &scrollPos, &textHeight, &fieldHeight); 
+		  
+			if (textHeight > fieldHeight) 
+				maxValue = textHeight - fieldHeight; 
+			else if (scrollPos) 
+				maxValue = scrollPos; 
+			else 
+				maxValue = 0; 
+
+			SclSetScrollBar(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeScrollBar)), scrollPos, 0, maxValue, fieldHeight-1);
+
 			handled = true;
 			break;
 		
@@ -532,6 +557,38 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 				if (FldScrollable(fld, winDown))
 					FldScrollField(fld, 1, winDown);
 			}
+			// Missing break here is intentional - scroll bar needs to be recomputed
+			
+		case fldChangedEvent:
+			frmP = FrmGetActiveForm();
+			fld = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
+		
+			FldGetScrollValues(fld, &scrollPos, &textHeight, &fieldHeight); 
+		  
+			if (textHeight > fieldHeight) 
+				maxValue = textHeight - fieldHeight; 
+			else if (scrollPos) 
+				maxValue = scrollPos; 
+			else 
+				maxValue = 0; 
+
+			SclSetScrollBar(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeScrollBar)), scrollPos, 0, maxValue, fieldHeight-1);
+			break;
+			
+		case sclRepeatEvent:
+        case sclExitEvent:
+        	frmP = FrmGetActiveForm();
+			fld = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
+        	scrollAmt=(eventP->data.sclExit.newValue) - (eventP->data.sclExit.value);
+			if (scrollAmt > 0) {
+				if (FldScrollable(fld, winDown))
+					FldScrollField(fld, scrollAmt, winDown);
+			} else {
+				if (FldScrollable(fld, winUp))
+					FldScrollField(fld, -scrollAmt, winUp);
+			}
+			handled = true;
+    		break;
 
 		default:
 			break;

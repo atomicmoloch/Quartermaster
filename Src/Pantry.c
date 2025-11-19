@@ -1,4 +1,5 @@
 #include <PalmOS.h>
+#include <PalmOSGlue.h>
 #include "Quartermaster.h"
 #include "Quartermaster_Rsc.h"
 
@@ -37,7 +38,7 @@ static void DrawPantryList(Int16 itemNum, RectanglePtr bounds, Char** data) {
 		if (ingredientH) {
 			ingredientP = MemHandleLock(ingredientH);
 			
-			WinDrawTruncChars(
+			WinGlueDrawTruncChars(
 				ingredientP,
 				StrLen(ingredientP),
 				bounds->topLeft.x,

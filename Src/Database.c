@@ -64,7 +64,8 @@ static Int16 DBStringCompare(void *rec1, void *rec2, Int16 other,
                         SortRecordInfoPtr rec2SortInfo,
                         MemHandle appInfoH)
 {
-    return TxtCaselessCompare((Char *)rec1, StrLen((Char *)rec1), NULL, (Char *)rec2, StrLen((Char *)rec2), NULL);
+	return StrCompare((Char *)rec1, (Char *)rec2);
+    // Formerly used TxtCaselessCompare - removed for compatibility
 }
 
 
@@ -112,7 +113,7 @@ static Int16 DBIngredientIDCompare(void *rec1, void *rec2, Int16 other,
     str1 = (Char *)MemHandleLock(recH1);
     str2 = (Char *)MemHandleLock(recH2);
 
-    result = TxtCaselessCompare(str1, StrLen(str1), NULL, str2, StrLen(str2), NULL);
+	result = StrCompare(str1, str2);
 
     MemHandleUnlock(recH1);
     MemHandleUnlock(recH2);
@@ -904,6 +905,9 @@ UInt16 PantryFuzzySearch(MemHandle* ret) {
 	UInt16 j;
 	UInt16 idx = 0;
 	
+	if (numRecipes == 0)
+		return 0;
+	
 	*ret = MemHandleNew(numRecipes * sizeof(UInt16));
 	results = MemHandleLock(*ret);
 	
@@ -956,6 +960,9 @@ UInt16 PantryStrictSearch(MemHandle* ret) {
 	UInt16 i;
 	UInt16 j;
 	UInt16 idx = 0;
+	
+	if (numRecipes == 0)
+		return 0;
 	
 	*ret = MemHandleNew(numRecipes * sizeof(UInt16));
 	results = MemHandleLock(*ret);

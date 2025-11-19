@@ -5,15 +5,16 @@ I've frequently wanted an easy way to find all the recipes I could make with the
 
 Inspired by Sudo-nano's [application by the same name.](https://github.com/sudo-nano/quartermaster).
 
-Currently in early development!
+Core functionality done, just polishing it up for release!
 
 Made using the Codewarriors IDE
 
 
 ## Issues
 
- - Maybe add add ingredient panel for adding ingredients without creating a recipe?
- 	- also manual removal of manually-added recipes
- 	- Recipe section of yaml file format
- - Add scrollbar to edit interface?
+ - Ingredient section of yaml file format
  - General interface polish
+
+## Debugging
+
+- Memory leak somewhere

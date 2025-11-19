@@ -7,9 +7,11 @@ MENU ID MainMenuBar
 BEGIN
 	PULLDOWN "View"
 	BEGIN
-		MENUITEM "Recipes" ID ViewRecipes   "R"
+		MENUITEM "Recipes" ID ViewRecipes   "R"		
 		MENUITEM "Pantry" ID ViewPantry   "P"
 		MENUITEM "Grocery List" ID ViewGrocery  "G"
+		MENUITEM SEPARATOR
+		MENUITEM "Ingredients" ID ViewIngredients
 END
 PULLDOWN "Help"
 	BEGIN
@@ -28,23 +30,22 @@ END
 
 
 
-FORM ID AboutForm AT (2 2 156 156)
+FORM ID AboutForm AT (0 70 160 90)
     SAVEBEHIND FRAME MODAL
     DEFAULTBTNID AboutOKButton
 BEGIN
 	TITLE "About Quartermaster"
 	LABEL "Quartermaster"
-	    AUTOID AT (CENTER 23)
-	    FONT 2
+	    AUTOID AT (CENTER 15)
+	    FONT 1
 	LABEL 
-		"By ATOMICMOLOCH"
-		AUTOID AT (35 54)
-	FIELD ID AboutVersionField AT (50 100 60 12)
-	    NONEDITABLE
-	    MAXCHARS 80 
-	    FONT 1 
-	BUTTON "OK" ID AboutOKButton AT (58 133 40 12)
+		"Created by AtomicMoloch"
+		AUTOID AT (CENTER 30)
+	BUTTON "OK" ID AboutOKButton AT (115 75 40 AUTO)
 	
+	LABEL 
+		"AtomicMoloch@proton.me"
+		AUTOID AT (CENTER 45)
 END
 
 ICONFAMILYEX
@@ -63,46 +64,53 @@ NOFRAME MENUID menuViewRecipe
 BEGIN
         TITLE "View Recipe"
 	 
-	SCROLLBAR ViewRecipeScrollbar AT (152 16 7 142) USABLE VALUE 50 MIN 0 MAX 100 PAGESIZE 10
+	SCROLLBAR ViewRecipeScrollbar AT (150 16 7 143) USABLE VALUE 0 MIN 0 MAX 100 PAGESIZE 10
 END
 
 FORM ID formRecipeList   AT ( 0 0 160 160 )
 NOFRAME MENUID MainMenuBar
 BEGIN
         TITLE "Recipes"
-	LIST "" ID RecipeList     AT (5 20 77 134) VISIBLEITEMS 12
-	BUTTON "View" ID RecipeListView   AT (115 23 AUTO AUTO)
-	BUTTON "Delete" ID RecipeListDelete   AT (111 60 AUTO AUTO)
-	BUTTON "Edit" ID RecipeListEdit  AT (116 41 AUTO AUTO)
-	BUTTON "New" ID RecipeListNew  AT (115 79 AUTO AUTO)
-	BUTTON "Clear" ID RecipeListClear  AT (113 97 AUTO AUTO)
+	LIST "" ID RecipeList     AT (0 15 85 145) VISIBLEITEMS 13
+	BUTTON "View" ID RecipeListView   AT (105 20 40 12)
+	BUTTON "Delete" ID RecipeListDelete   AT (105 110 40 12)
+	BUTTON "Edit" ID RecipeListEdit  AT (105 80 40 12)
+	BUTTON "New" ID RecipeListNew  AT (105 140 40 12)
+	BUTTON "Clear" ID RecipeListClear  AT (105 50 40 12)
 END
 
 ALERT ID ErrorAlert 
 ERROR
 BEGIN
      TITLE "Error"
-     MESSAGE "^2Error: ^1"
+     MESSAGE "Error: ^1"
      BUTTONS "OK" 
 END
 
-
+ALERT ID FatalErrorAlert 
+ERROR
+BEGIN
+     TITLE "Fatal Error"
+     MESSAGE "Fatal Error: ^1"
+     BUTTONS "OK" 
+END
 
 FORM ID formEditRecipe    AT ( 0 0 160 160 )
 NOFRAME MENUID menuEditRecipe
 BEGIN
         TITLE "Edit Recipe"
 	
-	FIELD ID EditRecipeSteps  AT (2 68 157 75) MAXCHARS 2048 EDITABLE HASSCROLLBAR MULTIPLELINES DYNAMICSIZE UNDERLINED
-	BUTTON "Save" ID EditRecipeSave  AT (3 145 AUTO AUTO)
-	BUTTON "Cancel" ID EditRecipeCancel  AT (39 145 AUTO AUTO)
-	GRAFFITISTATEINDICATOR AT (151 147)
-	LABEL "Name:" AUTOID AT (1 17)
-	FIELD ID EditRecipeName  AT (28 17 131 12) MAXCHARS 31 EDITABLE UNDERLINED
-	LABEL "Ingredients:" AUTOID AT (1 29)
-	LIST "" ID EditRecipeIngredients     AT (52 31 107 35) VISIBLEITEMS 3
-	LABEL "Steps:" AUTOID AT (1 56)
-		END
+	FIELD ID EditRecipeSteps  AT (5 70 140 70) MAXCHARS 2048 EDITABLE HASSCROLLBAR MULTIPLELINES DYNAMICSIZE UNDERLINED
+	BUTTON "Save" ID EditRecipeSave  AT (100 145 40 12)
+	BUTTON "Cancel" ID EditRecipeCancel  AT (20 145 40 12)
+	GRAFFITISTATEINDICATOR AT (150 150)
+	LABEL "Name:" AUTOID AT (5 17)
+	FIELD ID EditRecipeName  AT (40 17 115 AUTO) MAXCHARS 31 EDITABLE UNDERLINED
+	LABEL "Ingreds:" AUTOID AT (5 31)
+	LIST "" ID EditRecipeIngredients     AT (40 31 115 35) VISIBLEITEMS 3
+	LABEL "Steps:" AUTOID AT (5 55)
+	SCROLLBAR ID EditRecipeScrollBar  AT (150 70 7 70) USABLE VALUE 0 MIN 0 MAX 100 PAGESIZE 10
+END
 
 ALERT ID ConfirmationAlert 
 CONFIRMATION DEFAULTBUTTON 1
@@ -118,26 +126,34 @@ MODAL SAVEBEHIND HELPID AddIngredientHelp
 BEGIN
         TITLE "Add Ingredient"
 	
-	BUTTON "Save" ID AddIngredientSave  AT (3 145 AUTO AUTO)
-	BUTTON "Cancel" ID AddIngredientCancel  AT (39 145 AUTO AUTO)
-	LABEL "Name:" AUTOID AT (3 116)
-	FIELD ID formAddName  AT (39 116 120 11) MAXCHARS 255 EDITABLE UNDERLINED 
-	LABEL "Units:" AUTOID AT (3 93)
-	FIELD ID formAddUnit  AT (39 93 120 11) MAXCHARS 255 EDITABLE UNDERLINED 
-	LABEL "Quantity:" AUTOID AT (3 69)
-	FIELD ID formAddWhole  AT (49 69 33 11) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
-	LABEL "/" AUTOID AT (120 69)
-	FIELD ID formAddFrac   AT (88 69 27 11) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
-	FIELD ID formAddDenom  AT (131 69 27 11) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
-	GRAFFITISTATEINDICATOR AT (147 145)
-	LIST ""   listAddIngredient AT (8 17 80 46) VISIBLEITEMS 4
-	BUTTON "Select" ID AddIngredientSelect  AT (96 49 AUTO AUTO)
+	BUTTON "Save" ID AddIngredientSave  AT (105 145 40 12)
+	BUTTON "Cancel" ID AddIngredientCancel  AT (15 145 40 12)
+	LABEL "Name:" AUTOID AT (5 120)
+	FIELD ID formAddName  AT (35 120 120 AUTO) MAXCHARS 255 EDITABLE UNDERLINED 
+	LABEL "Units:" AUTOID AT (5 95)
+	FIELD ID formAddUnit  AT (35 95 120 AUTO) MAXCHARS 255 EDITABLE UNDERLINED 
+	LABEL "Quantity:" AUTOID AT (5 70)
+	FIELD ID formAddWhole  AT (50 70 30 AUTO) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
+	LABEL "/" AUTOID AT (120 70)
+	FIELD ID formAddFrac   AT (90 70 25 AUTO) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
+	FIELD ID formAddDenom  AT (130 70 25 AUTO) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
+	GRAFFITISTATEINDICATOR AT (150 150)
+	LIST ""   listAddIngredient AT (5 20 80 45) VISIBLEITEMS 4
+	BUTTON "Select" ID AddIngredientSelect  AT (105 33 40 12)
 END
 
-STRING ID AddIngredientHelp "Ingredient names should be in the plural form if applicable, for consistency.\r\nEntering zero for an ingredient amount will cause it not to be displayed."                                                                                                                                                                                                                                                                                   
+STRING ID AddIngredientHelp "Ingredient names should be in the plural form if applicable, for consistency.\r\nEntering zero for an ingredient amount will cause amounts to be omitted."                                                                                                                                                                                                                                                                                   
 
 MENU ID menuEditRecipe 
 BEGIN
+	PULLDOWN "View"
+	BEGIN
+		MENUITEM "Recipes" ID ViewRecipes   "R"
+		MENUITEM "Pantry" ID ViewPantry   "P"
+		MENUITEM "Grocery List" ID ViewGrocery  "G"
+		MENUITEM SEPARATOR
+		MENUITEM "Ingredients" ID ViewIngredients
+	END
      PULLDOWN "Recipe"
      BEGIN
           MENUITEM "Add Ingredient" ID EditRecipeAddIng  
@@ -157,10 +173,10 @@ FORM ID formPantry  AT ( 0 0 160 160 )
 NOFRAME MENUID menuPantry
 BEGIN
         TITLE "Pantry"
-	LIST "" ID pantryOptionsList    AT (6 20 50 134) VISIBLEITEMS 12
-	LIST "" ID pantryList     AT (105 20 50 134) VISIBLEITEMS 12
-	BUTTON "Add >" ID PantryAdd  AT (64 20 AUTO AUTO)
-	BUTTON "< Del" ID PantryDelete  AT (65 41 AUTO AUTO)
+	LIST "" ID pantryOptionsList    AT (0 15 50 145) VISIBLEITEMS 13
+	LIST "" ID pantryList     AT (110 15 50 145) VISIBLEITEMS 13
+	BUTTON "Add >" ID PantryAdd  AT (CENTER 30 40 12)
+	BUTTON "< Del" ID PantryDelete  AT (CENTER 130 40 12)
 END
 
 MENU ID menuPantry 
@@ -170,6 +186,8 @@ BEGIN
 		MENUITEM "Recipes" ID ViewRecipes   "R"
 		MENUITEM "Pantry" ID ViewPantry   "P"
 		MENUITEM "Grocery List" ID ViewGrocery  "G"
+		MENUITEM SEPARATOR
+		MENUITEM "Ingredients" ID ViewIngredients
 	END
      PULLDOWN "Search"
      BEGIN
@@ -182,10 +200,10 @@ FORM ID formGrocery  AT ( 0 0 160 160 )
 NOFRAME MENUID MainMenuBar
 BEGIN
         TITLE "Grocery List"
-	LIST "" ID groceryOptionsList    AT (6 20 50 134) VISIBLEITEMS 12
-	LIST "" ID groceryList     AT (105 20 50 134) VISIBLEITEMS 12
-	BUTTON "Add >" ID GroceryAdd  AT (64 20 AUTO AUTO)
-	BUTTON "< Del" ID GroceryDelete  AT (65 41 AUTO AUTO)
+	LIST "" ID groceryOptionsList    AT (0 15 50 145) VISIBLEITEMS 13
+	LIST "" ID groceryList     AT (110 15 50 145) VISIBLEITEMS 13
+	BUTTON "Add >" ID GroceryAdd  AT (CENTER 30 40 12)
+	BUTTON "< Del" ID GroceryDelete  AT (CENTER 130 40 12)
 END
 
 
@@ -205,6 +223,8 @@ BEGIN
 		MENUITEM "Recipes" ID ViewRecipes   "R"
 		MENUITEM "Pantry" ID ViewPantry   "P"
 		MENUITEM "Grocery List" ID ViewGrocery  "G"
+		MENUITEM SEPARATOR
+		MENUITEM "Ingredients" ID ViewIngredients
 	END
 	PULLDOWN "Add"
 	BEGIN
@@ -216,3 +236,24 @@ PULLDOWN "Help"
 		MENUITEM "About Quartermaster" ID OptionsAboutQuartermaster
 	END
 END	
+
+FORM ID formManageIngredients  AT ( 0 0 160 160 )
+NOFRAME MENUID MainMenuBar
+BEGIN
+        TITLE "Ingredients"
+	LIST "" ID ingredientList    AT (0 15 100 145) VISIBLEITEMS 13
+	BUTTON "New" ID IngredientAdd  AT (110 30 40 12)
+	BUTTON "Delete" ID IngredientDelete  AT (110 130 40 12)
+END
+
+STRING ID ManualAddIngredientHelp "Ingredient names should be in the plural form if applicable, for consistency.\r\nIngredients can also be added through the add recipe interface."
+
+FORM ID formManualAddIngredient  AT ( 0 95 160 65 )
+MODAL SAVEBEHIND FRAME HELPID ManualAddIngredientHelp
+BEGIN
+        TITLE "Add Ingredient"
+	FIELD ID fieldManualAddIngredient  AT (15 20 130 15) MAXCHARS 255 EDITABLE UNDERLINED
+	BUTTON "Cancel" ID cancelManualAddIngredient  AT (15 50 40 AUTO)
+	BUTTON "Save" ID saveManualAddIngredient  AT (105 50 40 12)
+	GRAFFITISTATEINDICATOR AT (150 55)
+END
