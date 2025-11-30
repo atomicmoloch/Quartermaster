@@ -31,12 +31,15 @@
 // Custom errors
 #define errRecipeNameBlank		(appErrorClass | 11)
 #define errRecipeMaxIngreds		(appErrorClass | 12)
+
 #define errIngredNameBlank		(appErrorClass | 21)
 #define errIngredInUse          (appErrorClass | 22)
 #define errAddingIngred         (appErrorClass | 23)
+
 #define errSearchNoMatch		(appErrorClass | 31)
 			
-
+#define errAssertFailed 		(appErrorClass | 41)
+			
 
 /*********************************************************************
  * Structures
@@ -149,5 +152,6 @@ void displayError(Err code);
 void displayErrorIf(Err code);
 void displayFatalError(Err code);
 Boolean confirmChoice(UInt8 dialogC);
+void assert(Boolean value);
 
 #endif /* QUARTERMASTER_H_ */

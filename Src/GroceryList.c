@@ -68,6 +68,7 @@ static Boolean GroceryDoCommand(UInt16 command) {
 	ListType* lst;
 	UInt16 selection;
 	UInt32 id;
+	Err err;
 
 	switch(command) {
 		case GroceryAdd:
@@ -94,10 +95,14 @@ static Boolean GroceryDoCommand(UInt16 command) {
 	   		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, groceryList));
 	   		selection = LstGetSelection(lst); 
 			if (selection != noListSelection) {
-				DmRemoveRecord(gGroceryDB, selection); //maybe make more robust
-				lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, groceryList));
-				LstSetListChoices(lst, NULL, DmNumRecords(gGroceryDB));
-				LstDrawList(lst);
+		        err = DmRemoveRecord(gGroceryDB, selection);
+		        if (err != errNone) {
+		            displayError(err);
+		        } else {
+		            lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, groceryList));
+		            LstSetListChoices(lst, NULL, DmNumRecords(gGroceryDB));
+		            LstDrawList(lst);
+		        }
 			}
 			handled = true;
 			break;

@@ -234,8 +234,15 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
  *
  ***********************************************************************/
 void OpenRecipeForm(UInt16 selection) {
+	Err err;
+
     ctx.recipe    = DmQueryRecord(gRecipeDB, selection);
-    ctx.scrollPos = 0;
-    ctx.maxScroll = 0;
-    FrmGotoForm(formViewRecipe);
+    if (ctx.recipe) {
+	    ctx.scrollPos = 0;
+	    ctx.maxScroll = 0;
+	    FrmGotoForm(formViewRecipe);
+	} else {
+		err = DmGetLastErr();
+		displayError(err);
+	}
 }

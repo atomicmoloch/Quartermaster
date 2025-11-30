@@ -46,13 +46,16 @@ void displayError(Err code) {
 				StrCopy(buf, "No recipes match search criteria");
 				break;
 				
+			case errAssertFailed:
+				StrCopy(buf, "Memory leak present");
+				break;
+				
 			default:
 				StrCopy(buf, "[no dialogue specified]");
 				break;
 	
 		}
 	}
-	//FrmCustomAlert(ErrorAlert, "Test", NULL, NULL);
 	FrmCustomAlert(ErrorAlert, buf, NULL, NULL);
 }
 
@@ -126,4 +129,21 @@ Boolean confirmChoice(UInt8 dialogC) {
 	userChoice = FrmCustomAlert(ConfirmationAlert, buf, NULL, NULL);
 	
 	return (userChoice == 0);
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     assert
+ *
+ * DESCRIPTION:  Minimal assert implementation
+ *
+ * PARAMETERS:   boolean
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+void assert(Boolean assertValue) {
+	if (assertValue) {
+		displayError(errAssertFailed);
+	}
 }

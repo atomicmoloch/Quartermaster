@@ -281,6 +281,8 @@ void DatabaseClose() {
     if (gRecipeDB)     DmCloseDatabase(gRecipeDB);
     if (gIngredientDB) DmCloseDatabase(gIngredientDB);
     if (gUnitDB)       DmCloseDatabase(gUnitDB);
+    if (gPantryDB)	   DmCloseDatabase(gPantryDB);
+    if (gGroceryDB)    DmCloseDatabase(gGroceryDB);
 }
 
 /***********************************************************************
@@ -819,7 +821,7 @@ UInt32 UnitIDByName(const Char *unitName)
     Char *recP;
     UInt16 index;
     
-    index = DmFindSortPosition(gRecipeDB, (void *) unitName, 0, (DmComparF *) DBStringCompare, 0);
+    index = DmFindSortPosition(gUnitDB, (void *) unitName, 0, (DmComparF *) DBStringCompare, 0);
     
     if (index > 0) {
     	recH = DmQueryRecord(gUnitDB, index - 1);

@@ -30,7 +30,7 @@ END
 
 
 
-FORM ID AboutForm AT (0 70 160 90)
+FORM ID AboutForm AT (2 68 156 90)
     SAVEBEHIND FRAME MODAL
     DEFAULTBTNID AboutOKButton
 BEGIN
@@ -41,7 +41,7 @@ BEGIN
 	LABEL 
 		"Created by AtomicMoloch"
 		AUTOID AT (CENTER 30)
-	BUTTON "OK" ID AboutOKButton AT (115 75 40 AUTO)
+	BUTTON "OK" ID AboutOKButton AT (110 75 40 AUTO)
 	
 	LABEL 
 		"AtomicMoloch@proton.me"
@@ -71,7 +71,7 @@ FORM ID formRecipeList   AT ( 0 0 160 160 )
 NOFRAME MENUID MainMenuBar
 BEGIN
         TITLE "Recipes"
-	LIST "" ID RecipeList     AT (0 15 85 145) VISIBLEITEMS 13
+	LIST "" ID RecipeList     AT (0 16 85 145) VISIBLEITEMS 13
 	BUTTON "View" ID RecipeListView   AT (105 20 40 12)
 	BUTTON "Delete" ID RecipeListDelete   AT (105 110 40 12)
 	BUTTON "Edit" ID RecipeListEdit  AT (105 80 40 12)
@@ -138,7 +138,7 @@ BEGIN
 	FIELD ID formAddFrac   AT (90 70 25 AUTO) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
 	FIELD ID formAddDenom  AT (130 70 25 AUTO) MAXCHARS 255 EDITABLE UNDERLINED NUMERIC
 	GRAFFITISTATEINDICATOR AT (150 150)
-	LIST ""   listAddIngredient AT (5 20 80 45) VISIBLEITEMS 4
+	LIST ""   listAddIngredient AT (5 20 80 46) VISIBLEITEMS 4
 	BUTTON "Select" ID AddIngredientSelect  AT (105 33 40 12)
 END
 
@@ -248,12 +248,12 @@ END
 
 STRING ID ManualAddIngredientHelp "Ingredient names should be in the plural form if applicable, for consistency.\r\nIngredients can also be added through the add recipe interface."
 
-FORM ID formManualAddIngredient  AT ( 0 95 160 65 )
+FORM ID formManualAddIngredient  AT ( 2 96 156 63 )
 MODAL SAVEBEHIND FRAME HELPID ManualAddIngredientHelp
 BEGIN
         TITLE "Add Ingredient"
 	FIELD ID fieldManualAddIngredient  AT (15 20 130 15) MAXCHARS 255 EDITABLE UNDERLINED
-	BUTTON "Cancel" ID cancelManualAddIngredient  AT (15 50 40 AUTO)
-	BUTTON "Save" ID saveManualAddIngredient  AT (105 50 40 12)
-	GRAFFITISTATEINDICATOR AT (150 55)
+	BUTTON "Cancel" ID cancelManualAddIngredient  AT (15 48 40 AUTO)
+	BUTTON "Save" ID saveManualAddIngredient  AT (105 48 40 12)
+	GRAFFITISTATEINDICATOR AT (147 51)
 END

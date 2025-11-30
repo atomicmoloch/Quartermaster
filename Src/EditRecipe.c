@@ -357,7 +357,7 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 							break;
 						}
 						for (i = 0; i < ctx.numIngredients; i++) {
-							ctx.ingredientNames[i] = (UInt32)(ctx.ingredientNames[i] - ctx.ingredientStorage) + recP;
+							ctx.ingredientNames[i] = (ctx.ingredientNames[i] - ctx.ingredientStorage) + recP;
 						}
 						StrNCopy(recP + ctx.ingredientStorageSize, nameP, selection);
 						recP[ctx.ingredientStorageSize + selection] = '\0';
