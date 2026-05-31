@@ -211,29 +211,31 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 	   	case EditSelectAll:
 	   		frmP = FrmGetActiveForm();
 	   		focus = FrmGetFocus(frmP);
-			if (FrmGetObjectType(frmP, focus) == frmFieldObj) {
-			    fldP = FrmGetObjectPtr(frmP, focus);
-			   switch (command) {
-			   	case EditCut:
-			   		FldCut(fldP);
-			   		break;
-			   		
-			   	case EditCopy:
-			   		FldCopy(fldP);
-			   		break;
-			   		
-			   	case EditPaste:
-			   		FldPaste(fldP);
-			   		break;
-			   	
-			   	case EditUndo:
-			   		FldUndo(fldP);
-			   		break;
-			   		
-			   	case EditSelectAll:
-			  			FldSetSelection(fldP, 0, FldGetTextLength(fldP));
-			  			break;
-			  	}
+	   		if (focus != noFocus) { // Some element must be in focus for these functions to work
+				if (FrmGetObjectType(frmP, focus) == frmFieldObj) {
+				   fldP = FrmGetObjectPtr(frmP, focus);
+				   switch (command) {
+				   	case EditCut:
+				   		FldCut(fldP);
+				   		break;
+				   		
+				   	case EditCopy:
+				   		FldCopy(fldP);
+				   		break;
+				   		
+				   	case EditPaste:
+				   		FldPaste(fldP);
+				   		break;
+				   	
+				   	case EditUndo:
+				   		FldUndo(fldP);
+				   		break;
+				   		
+				   	case EditSelectAll:
+				  			FldSetSelection(fldP, 0, FldGetTextLength(fldP));
+				  			break;
+				  	}
+				}
 			}
 	  		handled = true;
 	  		break;
