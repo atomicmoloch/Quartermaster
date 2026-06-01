@@ -50,6 +50,14 @@ void displayError(Err code) {
 				StrCopy(buf, "Memory leak present");
 				break;
 				
+			case dmErrIndexOutOfRange:
+				StrCopy(buf, "DB index out of bounds");
+				break;
+				
+			case memErrNotEnoughSpace:
+				StrCopy(buf, "Not enough memory");
+				break;
+				
 			default:
 				StrCopy(buf, "[no dialogue specified]");
 				break;

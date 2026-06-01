@@ -157,7 +157,7 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
     ListType *lst;
     FieldPtr fldP;
     UInt16 focus;
-    UInt8 selection;
+    Int8 selection;
     Err err;
 	
 	switch (command) {
@@ -165,9 +165,6 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 	   		if (ctx.numIngredients == recipeMaxIngredients) {
 	   			displayError(errRecipeMaxIngreds);
 	   		} else {
-	   			/*frmP = FrmInitForm(formAddIngredient);
-	   			selection = FrmDoDialog(frmP);
-	   			FrmDeleteForm(frmP); */
 	   			AddIngredientForm();
 	   		}
 	   		handled = true;
@@ -180,11 +177,11 @@ static Boolean EditRecipeDoCommand(UInt16 command) {
 			if (selection != noListSelection) {
 				err = DeleteIngredient(selection);
 				if (err != errNone) displayError(err);
+				LstSetListChoices(lst, NULL, ctx.numIngredients);
+				// LstSetDrawFunction(lst, DrawIngredientEntryList);
+				LstDrawList(lst);
+				LstSetSelection(lst, -1);
 			}
-			LstSetListChoices(lst, NULL, ctx.numIngredients);
-			// LstSetDrawFunction(lst, DrawIngredientEntryList);
-			LstDrawList(lst);
-			LstSetSelection(lst, -1);
 	   		handled = true;
 	   		break;
 	   		
@@ -272,7 +269,9 @@ static void DrawIngredientEntryList(Int16 itemNum, RectanglePtr bounds, Char** d
     			   ctx.ingredientFracs[itemNum],
                    ctx.ingredientDenoms[itemNum]);
  	StrNCopy(unitBuf, ctx.unitNames[itemNum], 15);
- 	StrNCopy(nameBuf, ctx.ingredientNames[itemNum], 15);       
+ 	unitBuf[15] =  '\0';
+ 	StrNCopy(nameBuf, ctx.ingredientNames[itemNum], 15);
+ 	nameBuf[15] =  '\0';    
 
 	if (qtyBuf[0] != '\0')
 		StrPrintF(buf, "%s %s %s", qtyBuf, unitBuf, nameBuf);
@@ -621,8 +620,10 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
     MemSet(&ctx, sizeof(EditRecipeContext), 0);
     ctx.isNew             = isNew;
     ctx.recipeIndex       = selection;
-	ctx.ingredientNames   = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
-	ctx.unitNames         = MemPtrNew(sizeof(Char) * recipeMaxIngredients);
+	ctx.ingredientNames   = MemPtrNew(sizeof(Char*) * recipeMaxIngredients);
+	if (!ctx.ingredientNames) return memErrNotEnoughSpace;
+	ctx.unitNames         = MemPtrNew(sizeof(Char*) * recipeMaxIngredients);
+	if (!ctx.unitNames) return memErrNotEnoughSpace;
 
     if (!isNew) {
         recipeH = DmQueryRecord(gRecipeDB, selection);
@@ -648,8 +649,7 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
 	    		ctx.ingredientStorage = MemPtrNew(recipe.numIngredients * 32);
 	            storagePtr            = ctx.ingredientStorage;
 	                
-	   			if (!ctx.ingredientNames || !ctx.ingredientStorage)
-	   				return memErrNotEnoughSpace;
+	   			if (!ctx.ingredientStorage) return memErrNotEnoughSpace;
 	    			                
 			    for (i = 0; i < recipe.numIngredients; i++) {
 			        IngredientNameByID(buf, 32, recipe.ingredientIDs[i]);
@@ -665,8 +665,7 @@ Err OpenEditRecipeForm(UInt16 selection, Boolean isNew) {
 				ctx.unitStorage = MemPtrNew(recipe.numIngredients * 32);
 	            storagePtr      = ctx.unitStorage;
 	                
-	            if (!ctx.unitNames || !ctx.unitStorage)
-	            	return memErrNotEnoughSpace;
+	            if (!ctx.unitStorage) return memErrNotEnoughSpace;
 	                
 				for (i = 0; i < recipe.numIngredients; i++) {
 			        UnitNameByID(buf, 32, recipe.ingredientUnits[i]);

@@ -67,8 +67,8 @@ void DrawIngredientList(Int16 itemNum, RectanglePtr bounds, Char** data) {
  * DESCRIPTION:  Builds string for recipe unit quantity, based on if a
  *				 fractional component is specified
  *				 NOTE: PalmOS doesn't have a StrNPrintF function
- *				 However, since the max value for each parameter is 255,
- *				 the max string length is 11
+ *				 However, since the max value of all params is 255,
+ *				 the max length is 11. (note: count is limited at entry)
  *
  * PARAMETERS:   output buffer, whole unit component, fraction components
  *
@@ -84,6 +84,7 @@ void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom) {
         StrPrintF(out, "%u/%u", frac, denom);
     else
         StrPrintF(out, "%u %u/%u", count, frac, denom);
+    out[12] =  '\0'; 
 }
 
 /***********************************************************************
