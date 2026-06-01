@@ -88,21 +88,26 @@ UInt16 IndexOfEntry(DmOpenRef dbase, UInt32 id);
 Err AddIdToDatabase(DmOpenRef dbase, UInt32 id);
 UInt16 IndexFromID(DmOpenRef dbase, UInt32 id);
 UInt32 IDFromIndex(DmOpenRef dbase, UInt16 index);
-RecipeRecord RecipeGetRecord(MemPtr recP);
 
+// Recipe DB
 Err AddRecipe(const Char *recipeName, const Char *ingredientNames[],
     const Char *unitNames[], UInt16 numIngredients, const UInt8 counts[],
     const UInt8 fracs[], const UInt8 denoms[], const Char *recipeSteps);
 Err RemoveRecipe(UInt16 recipeIndex);
+UInt32 RecipeGetDBSize();
+RecipeRecord RecipeGetRecord(MemPtr recP);
 Char* RecipeGetStepsPtr(MemPtr recP); 
     
+// Ingredient DB
 UInt32 IngredientIDByName(const Char *ingredientName);
 Err IngredientNameByID(Char* buffer, UInt8 len, UInt32 entryID);
 Err RemoveIngredient(UInt32 ingId);
 
+// Unit DB
 UInt32 UnitIDByName(const Char *ingredientName);
 Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID);
 
+// Search functions
 UInt16 PantryFuzzySearch(MemHandle* ret);
 UInt16 PantryStrictSearch(MemHandle* ret);
 
@@ -154,7 +159,5 @@ void displayError(Err code);
 void displayErrorIf(Err code);
 void displayFatalError(Err code);
 Boolean confirmChoice(UInt8 dialogC);
-void assert(Boolean value, Err code);
-void memAssert(Boolean value);
 
 #endif /* QUARTERMASTER_H_ */

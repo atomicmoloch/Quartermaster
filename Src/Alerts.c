@@ -141,7 +141,7 @@ Boolean confirmChoice(UInt8 dialogC) {
  *
  * RETURNED:     nothing
  *
- ***********************************************************************/
+ ***********************************************************************
 void assert(Boolean assertValue, Err code) {
 	if (assertValue) {
 		displayError(code);
@@ -158,9 +158,10 @@ void assert(Boolean assertValue, Err code) {
  *
  * RETURNED:     nothing
  *
- ***********************************************************************/
+ ***********************************************************************
 void memAssert(Boolean assertValue) {
 	if (assertValue) {
 		displayError(errMemAssertFailed);
 	}
 }
+*/

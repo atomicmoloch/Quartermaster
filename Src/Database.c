@@ -590,6 +590,29 @@ Err RemoveRecipe(UInt16 recipeIndex) {
 
 /***********************************************************************
  *
+ * FUNCTION:     RecipeGetDBSize
+ *
+ * DESCRIPTION:  Gets number of entries in recipe DB
+ *
+ * PARAMETERS:   none
+ *
+ * RETURNED:     number of entries in recipe DB
+ *
+ ***********************************************************************/
+UInt32 RecipeGetDBSize()
+{
+	LocalID dbID;
+    Err err;
+	UInt32 numRecords = 0; 
+    
+    dbID = DmFindDatabase(0, databaseRecipeName);
+	DmDatabaseSize(0, dbID, &numRecords, NULL, NULL);
+	if (err != errNone) displayError(err);
+	return numRecords;
+}
+
+/***********************************************************************
+ *
  * FUNCTION:     RecipeGetRecord
  *
  * DESCRIPTION:  Reconstructs recipe header from recipe database entry

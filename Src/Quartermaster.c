@@ -249,7 +249,7 @@ static Err AppStart(void)
 	
 	err = DatabaseOpen();
 		
-	if (err == errNone) {
+	if (err == errNone && RecipeGetDBSize() == 0) {
 		UInt8 counts[2] = {2, 4};
 		UInt8 fracs[2] = {0};
 		UInt8 denoms[2] = {0};
@@ -368,6 +368,10 @@ static Err RomVersionCompatible(UInt32 requiredVersion, UInt16 launchFlags)
 UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 {
 	Err error;
+	
+	// used by sysAppLaunchCmdFind
+	Boolean alreadyLaunched;
+	UInt16 recordNum;
 
 	error = RomVersionCompatible (ourMinVersion, launchFlags);
 	if (error) return (error);
@@ -388,8 +392,22 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 
 			AppStop();
 			break;
-		case sysAppLaunchCmdFind:
+		case sysAppLaunchCmdFind: 
 			SystemFindSearch((FindParamsPtr) cmdPBP);
+			break;
+		case sysAppLaunchCmdGoTo: // Launch from find dialogue - go to the recipe matching the search result
+			alreadyLaunched = launchFlags & sysAppLaunchFlagNewGlobals;
+			recordNum = ((GoToParamsPtr) cmdPBP)->recordNum;
+			if (alreadyLaunched) {
+				error = AppStart();
+				if (error) return error;
+				
+				OpenRecipeForm(recordNum);
+				AppEventLoop();
+				AppStop();
+			} else {
+				OpenRecipeForm(recordNum);
+			}
 			break;
 	}
 
