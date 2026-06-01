@@ -46,7 +46,7 @@ void displayError(Err code) {
 				StrCopy(buf, "No recipes match search criteria");
 				break;
 				
-			case errAssertFailed:
+			case errMemAssertFailed:
 				StrCopy(buf, "Memory leak present");
 				break;
 				
@@ -137,13 +137,30 @@ Boolean confirmChoice(UInt8 dialogC) {
  *
  * DESCRIPTION:  Minimal assert implementation
  *
+ * PARAMETERS:   boolean, error code if failure
+ *
+ * RETURNED:     nothing
+ *
+ ***********************************************************************/
+void assert(Boolean assertValue, Err code) {
+	if (assertValue) {
+		displayError(code);
+	}
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     memAssert
+ *
+ * DESCRIPTION:  Minimal memory assert implementation
+ *
  * PARAMETERS:   boolean
  *
  * RETURNED:     nothing
  *
  ***********************************************************************/
-void assert(Boolean assertValue) {
+void memAssert(Boolean assertValue) {
 	if (assertValue) {
-		displayError(errAssertFailed);
+		displayError(errMemAssertFailed);
 	}
 }

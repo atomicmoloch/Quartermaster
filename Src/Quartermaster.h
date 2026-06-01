@@ -14,7 +14,7 @@
  *  Constants
  *********************************************************************/
  
-#define appFileCreator			'WOEM'
+#define appFileCreator			'AMLK' // AtomicMoloch
 #define appName					"Quartermaster"
 #define appVersionNum			0x01
 #define appPrefID				0x00
@@ -38,7 +38,7 @@
 
 #define errSearchNoMatch		(appErrorClass | 31)
 			
-#define errAssertFailed 		(appErrorClass | 41)
+#define errMemAssertFailed 		(appErrorClass | 41)
 			
 
 /*********************************************************************
@@ -106,6 +106,8 @@ Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID);
 UInt16 PantryFuzzySearch(MemHandle* ret);
 UInt16 PantryStrictSearch(MemHandle* ret);
 
+void SystemFindSearch(FindParamsPtr findptr);
+
 /*********************************************************************
  * RecipeList.c functions
  *********************************************************************/
@@ -152,6 +154,7 @@ void displayError(Err code);
 void displayErrorIf(Err code);
 void displayFatalError(Err code);
 Boolean confirmChoice(UInt8 dialogC);
-void assert(Boolean value);
+void assert(Boolean value, Err code);
+void memAssert(Boolean value);
 
 #endif /* QUARTERMASTER_H_ */

@@ -274,7 +274,7 @@ static Err AppStart(void)
         "Serve from baking dish. Egg souffle may be served with White Sauce I, highly seasoned with celery salt, paprika, and onion juice.";
         
         		
-		err = AddRecipe("Scrambled Eggs", ingredients, units, 2, counts, fracs, denoms, steps);
+		AddRecipe("Scrambled Eggs", ingredients, units, 2, counts, fracs, denoms, steps);
         err = AddRecipe("Egg Souffle", ingredients2, units2, 7, counts2, fracs2, denoms2, steps2);
 	} 
 	
@@ -387,6 +387,9 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 			AppEventLoop();
 
 			AppStop();
+			break;
+		case sysAppLaunchCmdFind:
+			SystemFindSearch((FindParamsPtr) cmdPBP);
 			break;
 	}
 

@@ -1,4 +1,5 @@
 #include <PalmOS.h>
+#include <PalmOSGlue.h>
 #include "Quartermaster.h"
 #include "Quartermaster_Rsc.h"
 
@@ -998,4 +999,103 @@ UInt16 PantryStrictSearch(MemHandle* ret) {
 	MemHandleUnlock(*ret);
 	MemHandleResize(*ret, idx * sizeof(UInt16));
 	return idx;
+}
+
+/*********************************************************************
+ * Find entrypoint
+ *********************************************************************/
+
+/***********************************************************************
+ *
+ * FUNCTION:     SystemFindSearch
+ *
+ * DESCRIPTION:  Handles system find queries. Searches recipe names and
+ *				 steps strings. Has to be a stand-alone function because
+ *               find requests don't initialize global variables.
+ *
+ * PARAMETERS:   FindParamsPtr
+ *
+ * RETURNED:     nothing (gives data to system via FindSaveMatch and 
+ *               draws on screen directly)
+ *
+ ***********************************************************************/
+void SystemFindSearch(FindParamsPtr findParams) {
+
+    LocalID dbID;
+    DmOpenRef recipeDB;
+    
+    MemHandle recordH;
+    RecipeRecord* header;
+    RectangleType bounds;
+    
+    UInt16 recordNum;
+    Boolean done; // If find window is full (stop drawing)
+    Boolean match;
+    Char* recName;
+    Char* recSteps;
+    UInt32 pos;
+    UInt16 len;
+    
+    dbID = DmFindDatabase(0, databaseRecipeName);
+    if (!dbID) {
+    	return;
+    }
+    recipeDB = DmOpenDatabase(0, dbID, findParams->dbAccesMode);
+    if (!recipeDB) return;
+    
+    
+    // tells find caller there are no more records to be found
+    findParams->more = false;
+    
+    // Displays heading line in search window
+    done = FindDrawHeader(findParams, "Quartermaster");
+    
+    if (done) {
+    	findParams->more = true; // find box filled up before search started
+    } else {
+    	recordNum = findParams->recordNum; // Start with last record searched
+    	for (;;) {
+			match = false;
+			
+    		// Early exits if the user has despatched another event
+    		// checks every 16 records
+    		if ((recordNum & 0x000f) == 0 && EvtSysEventAvail(true)) {
+    			findParams->more=true;
+    			break;
+    		}
+    		
+    		recordH = DmQueryRecord(recipeDB, recordNum);
+    		if (!recordH) break; // all records searched, exit
+    		header = MemHandleLock(recordH);
+    		
+    		recName = header->name;
+    		recSteps = RecipeGetStepsPtr(header);
+    		 
+    		match = TxtGlueFindString(recName, findParams->strToFind, &pos, &len) 
+    				|| TxtGlueFindString(recSteps, findParams->strToFind, &pos, &len);
+    		// uses TxtGlueFindString to support multibyte characters
+    		
+    		if (match) { 
+    			done = FindSaveMatch(findParams, recordNum, pos, 0, 0, 0, dbID);
+    			
+    			if (done) break; // No room to draw recipe name
+    			
+	    		// Display recipe name in find results
+	    		FindGetLineBounds(findParams, &bounds);
+	    		WinGlueDrawTruncChars(
+					recName,
+					StrLen(recName),
+					bounds.topLeft.x,
+					bounds.topLeft.y,
+					bounds.extent.x
+				);
+				findParams->lineNumber++;
+			}
+			MemHandleUnlock(recordH);
+			if (done) break;
+			recordNum++;
+    	}
+    }
+    
+    DmCloseDatabase(recipeDB);
 }
