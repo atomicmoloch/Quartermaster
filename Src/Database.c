@@ -960,7 +960,11 @@ UInt16 PantryFuzzySearch(MemHandle* ret) {
 	
 	
 	MemHandleUnlock(*ret);
-	MemHandleResize(*ret, idx * sizeof(UInt16));
+	if (idx > 0) {
+		MemHandleResize(*ret, idx * sizeof(UInt16));
+	} else {
+		MemHandleFree(*ret);
+	}
 	return idx;
 }
 
@@ -1020,7 +1024,11 @@ UInt16 PantryStrictSearch(MemHandle* ret) {
 	
 	
 	MemHandleUnlock(*ret);
-	MemHandleResize(*ret, idx * sizeof(UInt16));
+	if (idx > 0) {
+		MemHandleResize(*ret, idx * sizeof(UInt16));
+	} else {
+		MemHandleFree(*ret);
+	}
 	return idx;
 }
 
@@ -1110,7 +1118,11 @@ UInt16 PantryReverseSearch(MemHandle* ret) {
 	
 	
 	MemHandleUnlock(*ret);
-	MemHandleResize(*ret, idx * sizeof(UInt16));
+	if (idx > 0) {
+		MemHandleResize(*ret, idx * sizeof(UInt16));
+	} else {
+		MemHandleFree(*ret);
+	}
 	return idx;
 }
 
