@@ -83,6 +83,7 @@ Boolean MainMenuDoCommand(UInt16 command);
  
 Err DatabaseOpen();
 void DatabaseClose();
+UInt32 GetDBSize(const Char *nameP);
 Boolean EntryInDatabase(DmOpenRef dbase, UInt32 id);
 UInt16 IndexOfEntry(DmOpenRef dbase, UInt32 id);
 Err AddIdToDatabase(DmOpenRef dbase, UInt32 id);
@@ -94,7 +95,6 @@ Err AddRecipe(const Char *recipeName, const Char *ingredientNames[],
     const Char *unitNames[], UInt16 numIngredients, const UInt8 counts[],
     const UInt8 fracs[], const UInt8 denoms[], const Char *recipeSteps);
 Err RemoveRecipe(UInt16 recipeIndex);
-UInt32 RecipeGetDBSize();
 RecipeRecord RecipeGetRecord(MemPtr recP);
 Char* RecipeGetStepsPtr(MemPtr recP); 
     
@@ -110,7 +110,7 @@ Err UnitNameByID(Char* buffer, UInt8 len, UInt32 entryID);
 // Search functions
 UInt16 PantryFuzzySearch(MemHandle* ret);
 UInt16 PantryStrictSearch(MemHandle* ret);
-
+UInt16 PantryReverseSearch(MemHandle* ret);
 void SystemFindSearch(FindParamsPtr findptr);
 
 /*********************************************************************

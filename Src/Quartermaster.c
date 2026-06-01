@@ -249,7 +249,7 @@ static Err AppStart(void)
 	
 	err = DatabaseOpen();
 		
-	if (err == errNone && RecipeGetDBSize() == 0) {
+	if (err == errNone && GetDBSize(databaseRecipeName) == 0) {
 		UInt8 counts[2] = {2, 4};
 		UInt8 fracs[2] = {0};
 		UInt8 denoms[2] = {0};
@@ -396,7 +396,7 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 			SystemFindSearch((FindParamsPtr) cmdPBP);
 			break;
 		case sysAppLaunchCmdGoTo: // Launch from find dialogue - go to the recipe matching the search result
-			alreadyLaunched = launchFlags & sysAppLaunchFlagNewGlobals;
+			alreadyLaunched = launchFlags & sysAppLaunchFlagNewGlobals; // Assumes if globals are initialized prog is already running
 			recordNum = ((GoToParamsPtr) cmdPBP)->recordNum;
 			if (alreadyLaunched) {
 				error = AppStart();

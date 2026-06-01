@@ -288,6 +288,29 @@ void DatabaseClose() {
 
 /***********************************************************************
  *
+ * FUNCTION:     GetDBSize
+ *
+ * DESCRIPTION:  Gets number of entries in DB
+ *
+ * PARAMETERS:   none
+ *
+ * RETURNED:     number of entries in DB
+ *
+ ***********************************************************************/
+UInt32 GetDBSize(const Char *nameP)
+{
+	LocalID dbID;
+    Err err;
+	UInt32 numRecords = 0; 
+    
+    dbID = DmFindDatabase(0, nameP);
+	err = DmDatabaseSize(0, dbID, &numRecords, NULL, NULL);
+	if (err != errNone) displayError(err);
+	return numRecords;
+}
+
+/***********************************************************************
+ *
  * FUNCTION:     IDFromIndex
  *
  * DESCRIPTION:  Utility function to convert between index and entry ID
@@ -586,29 +609,6 @@ Err RemoveRecipe(UInt16 recipeIndex) {
 	
 	MemHandleFree(recH);
 	return errNone;
-}
-
-/***********************************************************************
- *
- * FUNCTION:     RecipeGetDBSize
- *
- * DESCRIPTION:  Gets number of entries in recipe DB
- *
- * PARAMETERS:   none
- *
- * RETURNED:     number of entries in recipe DB
- *
- ***********************************************************************/
-UInt32 RecipeGetDBSize()
-{
-	LocalID dbID;
-    Err err;
-	UInt32 numRecords = 0; 
-    
-    dbID = DmFindDatabase(0, databaseRecipeName);
-	DmDatabaseSize(0, dbID, &numRecords, NULL, NULL);
-	if (err != errNone) displayError(err);
-	return numRecords;
 }
 
 /***********************************************************************
@@ -1013,6 +1013,96 @@ UInt16 PantryStrictSearch(MemHandle* ret) {
 		}
 		
 		if (CanBeMade) {
+			results[idx] = i;
+			idx++;
+		}
+	}
+	
+	
+	MemHandleUnlock(*ret);
+	MemHandleResize(*ret, idx * sizeof(UInt16));
+	return idx;
+}
+
+/***********************************************************************
+ *
+ * FUNCTION:     PantryReverseSearch
+ *
+ * DESCRIPTION:  Queries recipe database for all recipes that use every
+ *				 ingredient in the pantry
+ *				 e.g. if the pantry has beef and eggs, returns recipes
+ *				 iff they use both beef and eggs
+ *
+ * PARAMETERS:   MemHandle pointer to store returned list of recipes
+ *
+ * RETURNED:     number of recipes that match
+ *
+ ***********************************************************************/
+UInt16 PantryReverseSearch(MemHandle* ret) {
+	UInt16 numRecipes = DmNumRecords(gRecipeDB);
+	UInt16 pantrySize = DmNumRecords(gPantryDB);
+	UInt16* results;
+	MemHandle recH;
+	MemPtr recP;
+	MemHandle pantryRecH;
+	UInt32* pantryRecP;
+	RecipeRecord recipe;
+	UInt16 i;
+	UInt16 j;
+	UInt16 k;
+	UInt16 idx = 0;
+	Boolean found;
+	Boolean foundAll;
+	
+	if (numRecipes == 0)
+		return 0;
+	
+	if (pantrySize == 0)
+		return 0;
+	
+	*ret = MemHandleNew(numRecipes * sizeof(UInt16));
+	results = MemHandleLock(*ret);
+	
+	if (!results) {
+		displayError(memErrNotEnoughSpace);
+		return 0;
+	} //Could use improvement
+	
+	for (i = 0; i < numRecipes; i++) {
+		// Get recipe
+		recH = DmQueryRecord(gRecipeDB, i);
+		if (!recH) continue;
+		recP = MemHandleLock(recH);
+		recipe = RecipeGetRecord(recP);
+		MemHandleUnlock(recH); 
+		
+		foundAll = true;
+		
+		// Iterate over pantry
+		for (j = 0; j < pantrySize; j++) {
+			found = false;
+			pantryRecH = DmQueryRecord(gPantryDB, j);
+			if (!pantryRecH) continue;
+			pantryRecP = MemHandleLock(pantryRecH);
+			
+			// Iterate over recipe ingredients
+			for (k = 0; k < recipe.numIngredients; k++) {
+				if (recipe.ingredientIDs[k] == *pantryRecP) {
+					found = true;
+					break;
+				}
+			}
+			
+			MemHandleUnlock(pantryRecH);
+			
+			if (!found) {
+				foundAll = false;
+				break;
+			}
+		}
+		
+		// If all ingredients in the pantry are present in the recipe, adds it to results
+		if (foundAll) {
 			results[idx] = i;
 			idx++;
 		}

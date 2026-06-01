@@ -193,7 +193,8 @@ BEGIN
      BEGIN
           MENUITEM "Strict Search" ID StrictSearch  
      	MENUITEM "Fuzzy Search" ID FuzzySearch  
-	END    
+		MENUITEM "Reverse Search" ID ReverseSearch  
+END    
 END
 
 FORM ID formGrocery  AT ( 0 0 160 160 )

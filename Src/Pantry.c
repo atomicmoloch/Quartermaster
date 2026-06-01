@@ -114,6 +114,15 @@ static Boolean PantryDoCommand(UInt16 command) {
 				displayError(errSearchNoMatch);
 			handled = true;
 			break;
+			
+		case ReverseSearch:
+			numResults = PantryReverseSearch(&results);
+			if (numResults > 0)
+				OpenRecipeList(results, numResults);
+			else
+				displayError(errSearchNoMatch);
+			handled = true;
+			break;
 	}
 	
 	if (!handled)
