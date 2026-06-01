@@ -111,10 +111,10 @@ static void DrawRecipeList(Int16 itemNum, RectanglePtr bounds, Char** data) {
  *
  * PARAMETERS:   listptr
  *
- * RETURNED:     err
+ * RETURNED:     nothing (none of its component functions has an error ret)
  *
  ***********************************************************************/
-static Err PopulateRecipeList(ListType* lst) {
+static void PopulateRecipeList(ListType* lst) {
 	if (ctx.results == NULL)
 		LstSetListChoices(lst, NULL, DmNumRecords(gRecipeDB));
 	else
@@ -122,8 +122,6 @@ static Err PopulateRecipeList(ListType* lst) {
 	LstSetDrawFunction(lst, DrawRecipeList);
 	LstDrawList(lst);
 	LstSetSelection(lst, -1);
-	
-	return errNone;
 } 
 
 /***********************************************************************
@@ -169,8 +167,7 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 			    		// This is because the recipe indices in results
 			    		// are no longer guaranteed to be valid
 					}
-					err = PopulateRecipeList(list);
-					if (err != errNone) displayError(err);
+					 PopulateRecipeList(list);
 				}
 			}
 	   		handled = true;
@@ -199,8 +196,7 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 			}
 			ctx.numResults = 0;
 			list = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
-			err  = PopulateRecipeList(list);
-			if (err != errNone) displayError(err);	
+			PopulateRecipeList(list);
 	   	    handled = true;
 	   	    break;
 
@@ -238,8 +234,7 @@ Boolean RecipeListHandleEvent(EventPtr eventP) {
 			FrmDrawForm (frmP);
 			
 			lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
-			err  = PopulateRecipeList(lst);
-			if (err != errNone) displayError(err);	
+			PopulateRecipeList(lst);
 			handled = true;	
 			break;
 			
@@ -276,7 +271,27 @@ Boolean RecipeListHandleEvent(EventPtr eventP) {
  *
  ***********************************************************************/
 void OpenRecipeList(MemHandle results, UInt16 num) {
+	FormPtr frmP;
+	UInt16 formId;
+    ListType* lst;
+    Err err;
+    
+	frmP = FrmGetActiveForm();
+	formId = FrmGetFormId(frmP);
+	
+	if (ctx.results) {
+		MemHandleFree(ctx.results);
+	}
     ctx.results    = results;
     ctx.numResults = num;
-    FrmGotoForm(formRecipeList);
+    
+    if (formId != formRecipeList) {
+	    FrmGotoForm(formRecipeList);
+	} else {
+		// Because RecipeList's frmCloseEvent nullifies the search results
+		// Just redraws the list and resets the selection
+		lst = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, RecipeList));
+		
+		PopulateRecipeList(lst);
+	}
 }

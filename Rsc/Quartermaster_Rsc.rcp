@@ -12,10 +12,16 @@ BEGIN
 		MENUITEM "Grocery List" ID ViewGrocery  "G"
 		MENUITEM SEPARATOR
 		MENUITEM "Ingredients" ID ViewIngredients
-END
-PULLDOWN "Help"
+	END
+    PULLDOWN "Search"
+    BEGIN
+    	MENUITEM "Ready To Cook" ID StrictSearch  
+     	MENUITEM "Any Ingredient" ID FuzzySearch  
+		MENUITEM "All Ingredients" ID ReverseSearch  
+	END
+	PULLDOWN "Help"
 	BEGIN
-		MENUITEM "About Quartermaster" ID OptionsAboutQuartermaster
+		MENUITEM "About" ID OptionsAboutQuartermaster
 	END
 END	
 
@@ -39,7 +45,7 @@ BEGIN
 	    AUTOID AT (CENTER 15)
 	    FONT 1
 	LABEL 
-		"Created by AtomicMoloch"
+		"© 1999 AtomicMoloch"
 		AUTOID AT (CENTER 30)
 	BUTTON "OK" ID AboutOKButton AT (110 75 40 AUTO)
 	
@@ -170,7 +176,7 @@ BEGIN
 END
 
 FORM ID formPantry  AT ( 0 0 160 160 )
-NOFRAME MENUID menuPantry
+NOFRAME MENUID MainMenuBar
 BEGIN
         TITLE "Pantry"
 	LIST "" ID pantryOptionsList    AT (0 15 50 145) VISIBLEITEMS 13
@@ -179,28 +185,10 @@ BEGIN
 	BUTTON "< Del" ID PantryDelete  AT (CENTER 130 40 12)
 END
 
-MENU ID menuPantry 
-BEGIN
-	PULLDOWN "View"
-	BEGIN
-		MENUITEM "Recipes" ID ViewRecipes   "R"
-		MENUITEM "Pantry" ID ViewPantry   "P"
-		MENUITEM "Grocery List" ID ViewGrocery  "G"
-		MENUITEM SEPARATOR
-		MENUITEM "Ingredients" ID ViewIngredients
-	END
-     PULLDOWN "Search"
-     BEGIN
-          MENUITEM "Strict Search" ID StrictSearch  
-     	MENUITEM "Fuzzy Search" ID FuzzySearch  
-		MENUITEM "Reverse Search" ID ReverseSearch  
-END    
-END
-
 FORM ID formGrocery  AT ( 0 0 160 160 )
 NOFRAME MENUID MainMenuBar
 BEGIN
-        TITLE "Grocery List"
+    TITLE "Grocery List"
 	LIST "" ID groceryOptionsList    AT (0 15 50 145) VISIBLEITEMS 13
 	LIST "" ID groceryList     AT (110 15 50 145) VISIBLEITEMS 13
 	BUTTON "Add >" ID GroceryAdd  AT (CENTER 30 40 12)
@@ -232,9 +220,15 @@ BEGIN
 		MENUITEM "All to Grocery List" ID AddAll
 		MENUITEM "Missing to Grocery List" ID AddMissing
 	END
-PULLDOWN "Help"
+    PULLDOWN "Search"
+    BEGIN
+    	MENUITEM "Ready To Cook" ID StrictSearch  
+     	MENUITEM "Any Ingredient" ID FuzzySearch  
+		MENUITEM "All Ingredients" ID ReverseSearch  
+	END
+	PULLDOWN "Help"
 	BEGIN
-		MENUITEM "About Quartermaster" ID OptionsAboutQuartermaster
+		MENUITEM "About" ID OptionsAboutQuartermaster
 	END
 END	
 

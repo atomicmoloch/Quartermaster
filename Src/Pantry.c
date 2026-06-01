@@ -67,8 +67,6 @@ static Boolean PantryDoCommand(UInt16 command) {
 	Boolean handled = false;
 	ListType* lst;
 	UInt16 selection;
-	MemHandle results;
-	UInt16 numResults;
 
 	switch(command) {
 		case PantryAdd:
@@ -94,33 +92,6 @@ static Boolean PantryDoCommand(UInt16 command) {
 				LstSetListChoices(lst, NULL, DmNumRecords(gPantryDB));
 				LstDrawList(lst);
 			}
-			handled = true;
-			break;
-			
-		case StrictSearch:
-			numResults = PantryStrictSearch(&results);
-			if (numResults > 0)
-				OpenRecipeList(results, numResults);
-			else
-				displayError(errSearchNoMatch);
-			handled = true;
-			break;
-			
-		case FuzzySearch:
-			numResults = PantryFuzzySearch(&results);
-			if (numResults > 0)
-				OpenRecipeList(results, numResults);
-			else
-				displayError(errSearchNoMatch);
-			handled = true;
-			break;
-			
-		case ReverseSearch:
-			numResults = PantryReverseSearch(&results);
-			if (numResults > 0)
-				OpenRecipeList(results, numResults);
-			else
-				displayError(errSearchNoMatch);
 			handled = true;
 			break;
 	}

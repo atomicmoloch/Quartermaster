@@ -101,6 +101,9 @@ Boolean MainMenuDoCommand(UInt16 command)
 {
 	FormType * frmP;
 	Boolean handled = false;
+	// For search results:
+	MemHandle results;
+	UInt16 numResults;
 
 	switch (command)
 	{
@@ -114,6 +117,7 @@ Boolean MainMenuDoCommand(UInt16 command)
 			handled = true;
 			break;
 			
+		// Page navigation functions
 		case ViewRecipes:
 			FrmGotoForm(formRecipeList);
 			handled = true;
@@ -131,6 +135,34 @@ Boolean MainMenuDoCommand(UInt16 command)
 			
 		case ViewIngredients:
 			FrmGotoForm(formManageIngredients);
+			handled = true;
+			break;
+			
+		// Search functions
+		case StrictSearch:
+			numResults = PantryStrictSearch(&results);
+			if (numResults > 0)
+				OpenRecipeList(results, numResults);
+			else
+				displayError(errSearchNoMatch);
+			handled = true;
+			break;
+			
+		case FuzzySearch:
+			numResults = PantryFuzzySearch(&results);
+			if (numResults > 0)
+				OpenRecipeList(results, numResults);
+			else
+				displayError(errSearchNoMatch);
+			handled = true;
+			break;
+			
+		case ReverseSearch:
+			numResults = PantryReverseSearch(&results);
+			if (numResults > 0)
+				OpenRecipeList(results, numResults);
+			else
+				displayError(errSearchNoMatch);
 			handled = true;
 			break;
 	}
