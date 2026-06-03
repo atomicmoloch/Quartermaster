@@ -189,16 +189,16 @@ Boolean MainMenuDoCommand(UInt16 command)
  ***********************************************************************/
 Boolean KeyScrollList(WChar chr, UInt16 list1, UInt16 list2)
 {
-    FormPtr          frmP;
-    ListType*        lst1P;
-    ListType*        lst2P;
-    WinDirectionType dir;
-    Int16            select1, select2, numItems;
+    FormPtr     frmP;
+    ListType*   lst1P;
+    ListType*   lst2P;
+    Int16 		dir; // -1 or 1
+    Int16       select1, select2, numItems;
 
     if (chr != pageDownChr && chr != pageUpChr) return false;
 
     frmP = FrmGetActiveForm();
-    dir  = (chr == pageDownChr) ? winDown : winUp;
+    dir  = (chr == pageDownChr) ? 1 : -1;
 
     lst1P = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, list1));
 	select1 = LstGetSelection(lst1P);
@@ -212,14 +212,24 @@ Boolean KeyScrollList(WChar chr, UInt16 list1, UInt16 list2)
 		select2 = LstGetSelection(lst2P);
 		if (select2 != noListSelection) {
 			if (select1 == noListSelection || select2 > select1) {
-				return LstScrollList(lst2P, dir, 1);
+			    numItems = LstGetNumberOfItems(lst2P);
+			    if (numItems > (select2 + dir) && (select2 + dir) >= 0) {
+			    	LstSetSelection(lst2P, select2 + dir);
+			    	return true;
+			    }
+			    return false;
 			}
 		}
 	}
 	
     if (select1 == noListSelection) return false;
     
-    return LstScrollList(lst1P, dir, 1);
+    numItems = LstGetNumberOfItems(lst1P);
+    if (numItems > (select1 + dir) && (select1 + dir) >= 0) {
+    	LstSetSelection(lst1P, select1 + dir);
+    	return true;
+    }
+    return false;
 }
 
 /*********************************************************************

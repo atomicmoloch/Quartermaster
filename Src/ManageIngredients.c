@@ -150,6 +150,9 @@ Boolean ManageIngredientsHandleEvent(EventPtr eventP) {
 		case menuEvent: 
 			return MainMenuDoCommand(eventP->data.menu.itemID);
 			
+		case keyDownEvent:
+			return KeyScrollList(eventP->data.keyDown.chr, ingredientList, 0);
+			
 		default:		
 			break;
 	}

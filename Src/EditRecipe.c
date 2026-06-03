@@ -437,7 +437,7 @@ Boolean AddIngredientHandleEvent(EventPtr eventP) {
 				break;
 		}
 	}
-	else if (eventP->eType == appStopEvent) { //maybe should handle formcloseevent instead? 
+	else if (eventP->eType == appStopEvent) {
 		FrmReturnToForm(formEditRecipe);
 	}
 	
@@ -550,13 +550,19 @@ Boolean EditRecipeHandleEvent(EventPtr eventP) {
 			frmP = FrmGetActiveForm();
 			if (eventP->data.keyDown.chr == pageUpChr) {
 				fld = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
-				if (FldScrollable(fld, winUp))
+				if (FldScrollable(fld, winUp)) {
 					FldScrollField(fld, 1, winUp);
+				} else {
+					return KeyScrollList(eventP->data.keyDown.chr, EditRecipeIngredients, 0);
+				}
 			
 			} else if (eventP->data.keyDown.chr == pageDownChr) {
 				fld = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, EditRecipeSteps));
-				if (FldScrollable(fld, winDown))
+				if (FldScrollable(fld, winDown)) {
 					FldScrollField(fld, 1, winDown);
+				} else {
+					return KeyScrollList(eventP->data.keyDown.chr, EditRecipeIngredients, 0);
+				}
 			}
 			// Missing break here is intentional - scroll bar needs to be recomputed
 			
