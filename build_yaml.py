@@ -5,6 +5,7 @@ def read_pdb(filename):
         data = f.read()
     return data
 
+# Parses binary pdb and returns dictionary of DM db entries
 def parse_pdb(data):
     num_records = struct.unpack_from(">H", data, 76)[0]
     offset = 78
@@ -25,6 +26,7 @@ def parse_pdb(data):
 
     return record_data
 
+# Unpacks a single recipe into a python object
 def unpack_recipe(recipe_record, ingredient_records, unit_records):
     offset = 0
     name, num_ing = struct.unpack_from(">32sB", recipe_record, offset)
@@ -66,14 +68,15 @@ def unpack_recipe(recipe_record, ingredient_records, unit_records):
     }
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: python3 pdb_to_yaml.py [Recipe PDB] [Ingredients PDB] [Units PDB] [Output YML]")
+    if len(sys.argv) < 4:
+        print("Usage: python3 pdb_to_yaml.py [Recipe PDB] [Ingredients PDB] [Units PDB] {Output YML}")
         sys.exit(1)
     recipe_db = parse_pdb(read_pdb(sys.argv[1]))
     ingredients_db = parse_pdb(read_pdb(sys.argv[2]))
     units_db = parse_pdb(read_pdb(sys.argv[3])) 
     recipes = {"recipes": [unpack_recipe(v, ingredients_db, units_db) for v in recipe_db.values()]}
+    recipes["ingredients"] = [i.decode("ascii", "ignore").rstrip("\0") for i in ingredients_db.values()]
     
-    with open(sys.argv[4], "w") as f:
+    with open(sys.argv[4] or 'output.yml', "w") as f:
         yaml.dump(recipes, f, sort_keys=False)
         print(f"Wrote {sys.argv[4]} ({len(recipes)} records)")

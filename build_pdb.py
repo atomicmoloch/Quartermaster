@@ -1,4 +1,4 @@
-import struct, yaml, sys
+import struct, yaml, sys, argparse
 from datetime import datetime
 
 class PalmRecord:
@@ -16,7 +16,7 @@ def palm_timestamp():
     epoch_1904 = datetime(1904, 1, 1)
     now = datetime.now()
     seconds = int((now - epoch_1904).total_seconds())
-    return seconds & 0xFFFFFFFF  # I hate silent promotion
+    return seconds & 0xFFFFFFFF 
 
 def write_pdb(filename, dbname, creator, typecode, records):
     num_records = len(records)
@@ -69,7 +69,13 @@ def build_records(data):
     unit_ids = {} #lookup dict for unit ids
     next_unit_id = 1
     
-    for r in data["recipes"]:
+    # Handles ingredients not associated with a recipe / declared independently in 'ingredients' section
+    for i in data.get("ingredients", []):
+        ingredient_ids[i] = next_ingredient_id
+        next_ingredient_id += 1
+    
+    # Handles recipes and ingredients only declared in recipe
+    for r in data.get("recipes", []):
         name = r["name"].encode("ascii", errors='ignore')[:31] + b"\x00"
         steps = r.get("steps", "").replace("\\n", "\n").encode("ascii", errors='ignore') + b"\x00"
         # Allows steps to be omitted
@@ -113,7 +119,6 @@ def build_records(data):
         recipe_records.append(PalmRecord(record, next_recipe_id))
         next_recipe_id += 1
         
-        
     ingredient_ids = dict(sorted(ingredient_ids.items()))
     unit_ids = dict(sorted(unit_ids.items()))
 
@@ -129,10 +134,10 @@ def build_records(data):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: build_pdb.py [yaml recipe file]")
+        print("Usage: build_pdb.py [yaml recipe file] {output prefix}")
         sys.exit(1)
     data = read_data(sys.argv[1])
     unit_recs, ing_recs, recipe_recs = build_records(data)
-    write_pdb(f"Units{palm_timestamp()}.pdb", "QMUnits", "WOEM", "Data", unit_recs)
-    write_pdb(f"Ingredients{palm_timestamp()}.pdb", "QMIngredients", "WOEM", "Data", ing_recs)
-    write_pdb(f"Recipes{palm_timestamp()}.pdb", "QMRecipes", "WOEM", "Data", recipe_recs)
+    write_pdb(f"{sys.argv[2] or palm_timestamp()}-Units.pdb", "QMUnits", "WOEM", "Data", unit_recs)
+    write_pdb(f"{sys.argv[2] or palm_timestamp()}-Ingredients.pdb", "QMIngredients", "WOEM", "Data", ing_recs)
+    write_pdb(f"{sys.argv[2] or palm_timestamp()}-Recipes.pdb", "QMRecipes", "WOEM", "Data", recipe_recs)

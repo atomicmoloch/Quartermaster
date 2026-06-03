@@ -2,5 +2,6 @@ Debug/
 Release/
 Quartermaster_Data/
 boston.yaml
+output.yaml
 build_database.py
 *.pdb
