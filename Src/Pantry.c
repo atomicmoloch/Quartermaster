@@ -118,10 +118,10 @@ static Boolean PantryDoCommand(UInt16 command) {
  *
  ***********************************************************************/
 Boolean PantryHandleEvent(EventPtr eventP) {
-   FormPtr frmP;
-   Boolean handled = false;
-   ListType* lst;
-
+    FormPtr frmP;
+    Boolean handled = false;
+    ListType* lst;
+	
 	switch (eventP->eType) {
 		case frmOpenEvent:
 			frmP = FrmGetActiveForm();			
@@ -147,6 +147,9 @@ Boolean PantryHandleEvent(EventPtr eventP) {
 
 		case menuEvent: 
 			return PantryDoCommand(eventP->data.menu.itemID);
+			
+		case keyDownEvent:
+			return KeyScrollList(eventP->data.keyDown.chr, pantryOptionsList, pantryList);
 			
 		default:		
 			break;

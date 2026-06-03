@@ -171,6 +171,57 @@ Boolean MainMenuDoCommand(UInt16 command)
 	return handled;
 }
 
+/***********************************************************************
+ *
+ * FUNCTION:     KeyScrollList
+ *
+ * DESCRIPTION:  Allows the arrow keys to scroll lists
+ *
+ * USAGE:        Put in EventHandler:
+ *				 case keyDownEvent:
+ *               	return KeyScrollList(eventP->data.keyDown.chr, LIST1);
+ *
+ * PARAMETERS:  chr (from data.keyDown.chr), list ids. 
+ *				If two lists are provided, it scrolls the more scrolled one
+ *
+ * RETURNED:     handled boolean
+ *
+ ***********************************************************************/
+Boolean KeyScrollList(WChar chr, UInt16 list1, UInt16 list2)
+{
+    FormPtr          frmP;
+    ListType*        lst1P;
+    ListType*        lst2P;
+    WinDirectionType dir;
+    Int16            select1, select2, numItems;
+
+    if (chr != pageDownChr && chr != pageUpChr) return false;
+
+    frmP = FrmGetActiveForm();
+    dir  = (chr == pageDownChr) ? winDown : winUp;
+
+    lst1P = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, list1));
+	select1 = LstGetSelection(lst1P);
+
+	// If either list has a selection of -1 / noListSelection, scrolls the other
+	// If both lists have a selection of noListSelection, does nothing
+	// if both lists are selected, scrolls the further scrolled one
+
+	if (list2 != 0) {
+		lst2P = FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, list2));
+		select2 = LstGetSelection(lst2P);
+		if (select2 != noListSelection) {
+			if (select1 == noListSelection || select2 > select1) {
+				return LstScrollList(lst2P, dir, 1);
+			}
+		}
+	}
+	
+    if (select1 == noListSelection) return false;
+    
+    return LstScrollList(lst1P, dir, 1);
+}
+
 /*********************************************************************
  * Internal Functions
  *********************************************************************/

@@ -215,6 +215,7 @@ Boolean ViewRecipeHandleEvent(EventPtr eventP) {
 			SclSetScrollBar(FrmGetObjectPtr(frmP, FrmGetObjectIndex(frmP, ViewRecipeScrollbar)),
                             ctx.scrollPos, 0, ctx.maxScroll, displayHeight-1);
 			DrawRecipe(frmP);
+			break;
 			
 		default:		
 			break;

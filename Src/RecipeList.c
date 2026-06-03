@@ -225,7 +225,6 @@ static Boolean RecipeListDoButtonCommand(UInt16 command) {
 Boolean RecipeListHandleEvent(EventPtr eventP) {
    FormPtr frmP;
    Boolean handled = false;
-   Err err;
    ListType* lst;
 
 	switch (eventP->eType) {
@@ -249,6 +248,9 @@ Boolean RecipeListHandleEvent(EventPtr eventP) {
 			}
 			ctx.numResults = 0;
 			break;
+			
+		case keyDownEvent:
+			return KeyScrollList(eventP->data.keyDown.chr, RecipeList, 0);
 			
 		case menuEvent: //Likely change later
 			return MainMenuDoCommand(eventP->data.menu.itemID);
@@ -274,7 +276,6 @@ void OpenRecipeList(MemHandle results, UInt16 num) {
 	FormPtr frmP;
 	UInt16 formId;
     ListType* lst;
-    Err err;
     
 	frmP = FrmGetActiveForm();
 	formId = FrmGetFormId(frmP);

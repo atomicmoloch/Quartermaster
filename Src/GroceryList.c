@@ -126,9 +126,9 @@ static Boolean GroceryDoCommand(UInt16 command) {
  *
  ***********************************************************************/
 Boolean GroceryHandleEvent(EventPtr eventP) {
-   FormPtr frmP;
-   Boolean handled = false;
-   ListType* lst;
+	FormPtr frmP;
+	Boolean handled = false;
+	ListType* lst;
 
 	switch (eventP->eType) {
 		case frmOpenEvent:
@@ -155,6 +155,9 @@ Boolean GroceryHandleEvent(EventPtr eventP) {
 
 		case menuEvent: 
 			return MainMenuDoCommand(eventP->data.menu.itemID);
+			
+		case keyDownEvent:
+			return KeyScrollList(eventP->data.keyDown.chr, groceryOptionsList, groceryList);
 			
 		default:		
 			break;

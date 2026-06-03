@@ -76,6 +76,7 @@ void AppStop();
 void DrawIngredientList(Int16 itemNum, RectanglePtr bounds, Char** data);
 void FormatQuantity(Char *out, UInt16 count, UInt8 frac, UInt8 denom);
 Boolean MainMenuDoCommand(UInt16 command);
+Boolean KeyScrollList(WChar chr, UInt16 list1, UInt16 list2);
  
 /*********************************************************************
  * Database.c functions
